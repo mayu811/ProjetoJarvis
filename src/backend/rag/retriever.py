@@ -1,0 +1,1 @@
+#recuperação hibrida de trecho relevantes

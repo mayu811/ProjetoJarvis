@@ -1,0 +1,1 @@
+# indexação hibrida: FAISS + BM25
