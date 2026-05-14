@@ -1,4 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+/* 
+    link da rolagem da página: 
+        https://www.w3schools.com/howto/howto_css_custom_scrollbar.asp
+
+    link da rolagem com flex, tutorial especializado:
+        https://www.scaler.com/topics/css/css-flexbox/
+*/
 
 :root {
   --cor-msg-headr: #3439be;
