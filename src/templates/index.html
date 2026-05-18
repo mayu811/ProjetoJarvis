@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto Jarvis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">        
+            <img src="{{ url_for('static', filename='assets/icon-jarvis.svg') }}" alt="Jarvis Avatar" class="avatar">
+            <h2>Jarvis</h2>           
+            
+        </div>
+        
+        <div class="chat-box" id="chatBox">
+
+            <!-- As mensagens aparecerão aqui -->
+
+        </div>
+        
+        <div class="chat-input-area">
+            <!-- Área de input para mensagens e envio de arquivos -->
+            <div class="input-wrapper">
+                <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
+                <button class="clip-btn" id="clipBtn"> 
+                    <img src="{{ url_for('static', filename='assets/clip-icon.svg') }}" alt="Clip Icon" class="clip-icon">
+                </button>
+            </div>
+
+            <!-- Botão de enviar mensagens -->
+             <input type="file" id="fileInput" style="display:none">
+            <button id="sendBtn">Enviar</button>
+
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

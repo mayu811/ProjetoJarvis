@@ -1,0 +1,181 @@
+:root {
+    --primary-color: #1D9E8F;
+    --secondary-color: #E6F4F1;
+    --header-color: white;
+    --chatbot-color: #F4FAF8;
+    --receved-message-color: white;
+    --sent-message-color: #1D9E8F;
+    --input-color: #E6F4F1;
+    --input-bt-color: #1D9E8F;
+    --input-bt-n-hover-color: #054840;
+}
+
+* {
+    margin: 0;
+    padding: 0 ;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+svg {
+    fill: #138A7B;
+}
+
+body {
+    background-color: var(--secondary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.avatar{
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+}
+
+.chat-container {
+    width: 100%;
+    height: 100%;
+    background-color: var(--secondary-color);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.chat-header {
+    background-color: var(--header-color);
+    color: #000000;
+    padding: 15px;
+    text-align: left;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.chat-box {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto; /* Permite rolagem vertical */
+    background-color: var(--chatbot-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0; /* Garante que o chat-box não cresça além do necessário */
+}
+
+.chat-box ul{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+}
+
+
+.message {
+    max-width: 75%;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1;
+    position: relative;
+}
+
+.message.received {
+    background-color: var(--receved-message-color);
+    align-self: flex-start;
+    border: 1px solid #ddd;
+}
+
+
+
+.message.sent {
+    color: #e3e3e3;
+    background-color: var(--sent-message-color);
+    align-self: flex-end;
+}
+
+.message.file-sent {
+    color: #e3e3e3;
+    background-color: var(--sent-message-color);
+    align-self: flex-end;
+    border: 1px solid #ddd;
+}
+
+.chat-input-area {
+    padding: 15px;
+    background-color: var(--input-color);
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    outline: none;
+}
+
+.chat-input-area button:not(.clip-btn) {
+    padding: 10px 20px;
+    background-color: var(--input-bt-color);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.chat-input-area button:hover:not(#clipBtn) {
+    background-color: var(--input-bt-n-hover-color);
+}
+
+.clip-input {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+
+.input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 12px 18px;
+    padding-right: 44px; /* abre espaço para o ícone não sobrepor o texto */
+}
+
+.clip-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+}
+
+.clip-btn:hover {
+    background-color: #ccc;
+}
+
+.clip-icon {
+    width: 20px;
+    height: 20px;
+}
