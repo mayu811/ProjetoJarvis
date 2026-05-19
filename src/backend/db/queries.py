@@ -1,40 +1,36 @@
 from src.backend.db.database import get_connection
 
-# ── Tarefas ───────────────────────────────────────────────────────────────────
-
-def adicionar_tarefa(titulo: str, descricao: str = None, prazo: str = None) -> dict:
+def adicionar_tarefa(titulo: str, prazo: str = None, prioridade: str = "baixa") -> dict:
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO tarefas (titulo, descricao, prazo) VALUES (?, ?, ?)",
-        (titulo, descricao, prazo)
+        "INSERT INTO tarefas (titulo, prazo, prioridade) VALUES (?, ?, ?)",
+        (titulo, prazo, prioridade)
     )
     conn.commit()
-    id_criado = cursor.lastrowid
     conn.close()
-    return {"id": id_criado, "titulo": titulo, "descricao": descricao, "prazo": prazo}
+    return {"ok": True, "mensagem": f"Tarefa '{titulo}' adicionada com sucesso."}
 
-def listar_tarefas(apenas_pendentes: bool = True) -> list:
+def listar_tarefas() -> dict:
     conn = get_connection()
     cursor = conn.cursor()
-    if apenas_pendentes:
-        cursor.execute("SELECT * FROM tarefas WHERE concluida = 0 ORDER BY prazo")
-    else:
-        cursor.execute("SELECT * FROM tarefas ORDER BY prazo")
+    cursor.execute("SELECT * FROM tarefas WHERE concluida = 0 ORDER BY prazo")
     tarefas = [dict(row) for row in cursor.fetchall()]
     conn.close()
-    return tarefas
+    if not tarefas:
+        return {"ok": True, "mensagem": "Nenhuma tarefa pendente."}
+    return {"ok": True, "tarefas": tarefas}
 
-def concluir_tarefa(id_tarefa: int) -> dict:
+def concluir_tarefa(titulo: str) -> dict:
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE tarefas SET concluida = 1 WHERE id = ?", (id_tarefa,))
+    cursor.execute("UPDATE tarefas SET concluida = 1 WHERE LOWER(titulo) = LOWER(?)", (titulo,))
     conn.commit()
     alteradas = cursor.rowcount
     conn.close()
-    return {"sucesso": alteradas > 0, "id": id_tarefa}
-
-# ── Compromissos ──────────────────────────────────────────────────────────────
+    if alteradas == 0:
+        return {"ok": False, "mensagem": f"Tarefa '{titulo}' não encontrada."}
+    return {"ok": True, "mensagem": f"Tarefa '{titulo}' concluída."}
 
 def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, local: str = None) -> dict:
     conn = get_connection()
@@ -44,11 +40,10 @@ def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, lo
         (titulo, descricao, data_hora, local)
     )
     conn.commit()
-    id_criado = cursor.lastrowid
     conn.close()
-    return {"id": id_criado, "titulo": titulo, "data_hora": data_hora}
+    return {"ok": True, "mensagem": f"Compromisso '{titulo}' adicionado com sucesso."}
 
-def consultar_agenda(data: str = None) -> list:
+def consultar_agenda(data: str = None) -> dict:
     conn = get_connection()
     cursor = conn.cursor()
     if data:
@@ -60,4 +55,6 @@ def consultar_agenda(data: str = None) -> list:
         cursor.execute("SELECT * FROM compromissos ORDER BY data_hora")
     compromissos = [dict(row) for row in cursor.fetchall()]
     conn.close()
-    return compromissos
+    if not compromissos:
+        return {"ok": True, "mensagem": "Nenhum compromisso na agenda."}
+    return {"ok": True, "compromissos": compromissos}

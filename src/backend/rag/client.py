@@ -1,4 +1,5 @@
 #chama a API do LLM para obter respostas
+from datetime import datetime
 import json
 from openai import OpenAI
 from src.backend.tools.definitions import (
@@ -6,7 +7,7 @@ from src.backend.tools.definitions import (
     adicionar_tarefa,
     listar_tarefas,
     concluir_tarefa,
-    adicionar_compromisso,
+    marcar_compromisso,
     consultar_agenda,
     buscar_material_rag
 )
@@ -16,18 +17,22 @@ client = OpenAI(
     api_key='Cxt2ftLF7d3mHS2JdiFqB-eSDAQeZvFATPXPs02lV9A'
 )
 
+data_atual = datetime.now().strftime("%d/%m/%Y")
+hora_atual = datetime.now().strftime("%H:%M")
+
 #print("LLM client pronto!")
 
 # sistema de prompt para o LLM entender como usar as funções
-SYSTEM_PROMPT = """
+SYSTEM_PROMPT = f"""
 Você é o Jarvis, um assistente acadêmico inteligente.
+Hoje é dia {data_atual} e são {hora_atual}.
 Quando o usuário pedir algo, responda SEMPRE em JSON com este formato:
 
 Para chamar uma função:
-{"action": "nome_da_funcao", "params": {"param1": "valor1"}}
+{{"action": "nome_da_funcao", "params": {{"param1": "valor1"}}}}
 
 Para responder diretamente:
-{"action": "resposta_direta", "params": {"texto": "sua resposta aqui"}}
+{{"action": "resposta_direta", "params": {{"texto": "sua resposta aqui"}}}}
 
 Funções disponíveis:
 - adicionar_tarefa(titulo, prazo, prioridade): adiciona uma tarefa
@@ -50,6 +55,7 @@ mapa_funcoes = {
 }
 
 def processar_mensagem(mensagem: str) -> str:
+
     resp = client.chat.completions.create(
         model='google/gemma-3-12b-it',
         messages=[

@@ -8,14 +8,8 @@ Ainda discutivel a existencia desse arquivo, mas mantém aqui por enquanto
 
 #definitios.py
 
-from src.backend.db.queries import (
-    adicionar_tarefa,
-    listar_tarefas,
-    concluir_tarefa,
-    adicionar_compromisso,
-    consultar_agenda
-)
 
+import json
 from src.backend.rag.retriever import recuperar_hibrido
 
 # definição das tools no formato que a OpenAI espera
@@ -30,10 +24,9 @@ TOOLS = [
                 "properties": {
                     "titulo": {"type": "string", "description": "Título da tarefa"},
                     "prazo": {"type": "string", "description": "Prazo da tarefa no formato DD/MM/AAAA"},
-                    "prioridade": {"type": "string", "enum": ["baixa", "media", "alta"]},
-                    "descricao": {"type": "string", "description": "Descrição da tarefa"}
+                    "prioridade": {"type": "string", "enum": ["baixa", "media", "alta"]}
                 },
-                "required": ["titulo", "prazo", "prioridade", "descricao"]
+                "required": ["titulo"]
             }
         }
     },
@@ -90,26 +83,56 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "adicionar_compromisso",
+            "name": "marcar_compromisso",
             "description": "Marca um compromisso ou evento na agenda do estudante.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "titulo": {"type": "string", "description": "Título do compromisso"},
                     "data": {"type": "string", "description": "Data do compromisso no formato DD/MM/AAAA"},
-                    "hora": {"type": "string", "description": "Hora do compromisso no formato HH:MM"},
-                    "descricao": {"type": "string", "description": "Descrição do compromisso"},
-                    "local": {"type": "string", "description": "Local do compromisso"}
+                    "hora": {"type": "string", "description": "Hora do compromisso no formato HH:MM"}
                 },
-                "required": ["titulo", "data", "hora", "descricao", "local"]
+                "required": ["titulo", "data", "hora"]
             }
         }
     }
 ]
 
-
+# armazenamento em memória (substituir por banco de dados futuramente)
+tarefas = []
+agenda = []
 
 # --------- implementação das funções (essas serão chamadas pelo LLM via JSON-RPC) ------------
+
+# função para adicionar tarefa
+def adicionar_tarefa(titulo: str, prazo: str = None, prioridade: str = "baixa") -> dict:
+    tarefa = {"titulo": titulo, "prazo": prazo, "prioridade": prioridade, "concluida": False}
+    tarefas.append(tarefa)
+    return {"ok": True, "mensagem": f"Tarefa '{titulo}' adicionada com sucesso."}
+
+# função para listar tarefas pendentes
+def listar_tarefas() -> dict:
+    pendentes = [t for t in tarefas if not t["concluida"]]
+    if not pendentes:
+        return {"ok": True, "mensagem": "Nenhuma tarefa pendente."}
+    return {"ok": True, "tarefas": pendentes}
+
+# função para concluir tarefa
+def concluir_tarefa(titulo: str) -> dict:
+    for t in tarefas:
+        if t["titulo"].lower() == titulo.lower():
+            t["concluida"] = True
+            return {"ok": True, "mensagem": f"Tarefa '{titulo}' concluída."}
+    return {"ok": False, "mensagem": f"Tarefa '{titulo}' não encontrada."}
+
+# função para consultar agenda (com ou sem filtro de data)
+def consultar_agenda(data: str = None) -> dict:
+    if not agenda:
+        return {"ok": True, "mensagem": "Nenhum compromisso na agenda."}
+    if data:
+        filtrados = [c for c in agenda if c.get("data") == data]
+        return {"ok": True, "compromissos": filtrados}
+    return {"ok": True, "compromissos": agenda}
 
 # função para buscar material relevante usando RAG
 def buscar_material_rag(pergunta: str) -> dict:
@@ -120,6 +143,7 @@ def buscar_material_rag(pergunta: str) -> dict:
     return {"ok": True, "contexto": contexto}
 
 # função para marcar compromisso na agenda
-def marcar_compromisso(titulo: str, data: str, hora: str, descricao: str = None, local: str = None) -> dict:
-    data_hora = f"{data} {hora}"
-    return adicionar_compromisso(titulo=titulo, data_hora=data_hora, descricao=descricao, local=local)
+def marcar_compromisso(titulo: str, data: str, hora: str) -> dict:
+    compromisso = {"titulo": titulo, "data": data, "hora": hora}
+    agenda.append(compromisso)
+    return {"ok": True, "mensagem": f"Compromisso '{titulo}' marcado para {data} às {hora}."}

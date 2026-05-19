@@ -75,12 +75,7 @@ async function sendMessage() {
 
     const dados = await resposta.json();
     adicionarMensagem(dados.resposta, 'received');
-    
-   
-    // simulação de resposta — substitua pelo call da sua API RAG
-    setTimeout(() => {
-        adicionarMensagem('Erro ao processar a mensagem.', 'received');
-    }, 1000);
+
 }
 
 // Envia a mensagem quando o botão de enviar 

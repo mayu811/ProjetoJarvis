@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import fitz  # pymupdf
 import docx
 
@@ -17,6 +18,8 @@ def converter_para_markdown(caminho_arquivo: str) -> str:
     # salva o .md gerado
     caminho_md = str(Path(caminho_arquivo).with_suffix('.md'))
     Path(caminho_md).write_text(texto, encoding='utf-8')
+
+    os.remove(caminho_arquivo)
 
     return texto
 

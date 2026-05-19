@@ -18,6 +18,7 @@ def inicializar_banco():
             titulo      TEXT    NOT NULL,
             descricao   TEXT,
             prazo       TEXT,
+            prioridade  TEXT    DEFAULT 'baixa',
             concluida   INTEGER DEFAULT 0,
             criada_em   TEXT    DEFAULT (datetime('now'))
         );
