@@ -1,26 +1,29 @@
-# PDF -> Marksdown converter (docling)
+from pathlib import Path
+import fitz  # pymupdf
+import docx
 
-# ── Conversão PDF → Markdown ──────────────────────────────────────────────────
+def converter_para_markdown(caminho_arquivo: str) -> str:
+    extensao = Path(caminho_arquivo).suffix.lower()
 
-from docling.document_converter import DocumentConverter
+    if extensao == '.pdf':
+        texto = _pdf_para_texto(caminho_arquivo)
+    elif extensao == '.txt':
+        texto = Path(caminho_arquivo).read_text(encoding='utf-8')
+    elif extensao == '.docx':
+        texto = _docx_para_texto(caminho_arquivo)
+    else:
+        raise ValueError(f'Formato {extensao} não suportado')
 
-print("Convertendo PDF para Markdown...")
-converter = DocumentConverter()
-resultado = converter.convert(CAMINHO_PDF)
+    # salva o .md gerado
+    caminho_md = str(Path(caminho_arquivo).with_suffix('.md'))
+    Path(caminho_md).write_text(texto, encoding='utf-8')
 
-# O Docling retorna um objeto 'DoclingDocument'.
-# O método export_to_markdown() entrega o texto estruturado.
-texto_markdown = resultado.document.export_to_markdown()
+    return texto
 
-# Salva o Markdown gerado para inspeção
-# Usamos Path.with_suffix() para funcionar com qualquer extensão (.pdf, .PDF, etc.)
-caminho_md = str(Path(CAMINHO_PDF).with_suffix(".md"))
-Path(caminho_md).write_text(texto_markdown, encoding="utf-8")
+def _pdf_para_texto(caminho: str) -> str:
+    doc = fitz.open(caminho)
+    return "\n\n".join([pagina.get_text() for pagina in doc])
 
-print(f"Markdown salvo em: {caminho_md}")
-print(f"Total de caracteres: {len(texto_markdown):,}")
-print()
-print("═" * 60)
-print("PRÉVIA DOS PRIMEIROS 1000 CARACTERES:")
-print("═" * 60)
-print(texto_markdown[:1000])
+def _docx_para_texto(caminho: str) -> str:
+    doc = docx.Document(caminho)
+    return "\n\n".join([p.text for p in doc.paragraphs if p.text.strip()])

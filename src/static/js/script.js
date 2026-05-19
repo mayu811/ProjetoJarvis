@@ -34,16 +34,20 @@ function adicionarMensagem(texto, tipo) {
 
 // Adiciona a mensagem de arquivo enviado ao chat quando 
 // um arquivo é selecionado
-fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        adicionarMensagem(`Arquivo enviado: ${file.name}`, 'sent');
-        
-        
-        setTimeout(() => {
-            adicionarMensagem('Recebi seu arquivo!', 'received');
-        }, 1000);
-    }
+fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('arquivo', file);
+
+    const resp = await fetch('/upload', {
+        method: 'POST',
+        body: formData  // FormData não usa Content-Type: application/json
+    });
+
+    const dados = await resp.json();
+    adicionarMensagem(dados.mensagem, 'received');
 });
 
 // Variável para controlar a exibição da mensagem inicial
@@ -61,7 +65,7 @@ async function sendMessage() {
     adicionarMensagem(texto, 'sent');
     messageInput.value = '';
 
-    /*
+    
     // chama seu backend
     const resposta = await fetch('/chat', {
         method: 'POST',
@@ -71,11 +75,11 @@ async function sendMessage() {
 
     const dados = await resposta.json();
     adicionarMensagem(dados.resposta, 'received');
-    */
+    
    
     // simulação de resposta — substitua pelo call da sua API RAG
     setTimeout(() => {
-        adicionarMensagem('Recebi sua mensagem!', 'received');
+        adicionarMensagem('Erro ao processar a mensagem.', 'received');
     }, 1000);
 }
 

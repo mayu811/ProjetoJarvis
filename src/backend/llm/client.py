@@ -1,1 +1,0 @@
-#chama a API do LLM para obter respostas
