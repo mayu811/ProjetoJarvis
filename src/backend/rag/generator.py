@@ -26,7 +26,7 @@ def construir_prompt(pergunta, docs):
     )
 
 
-def responder_rag(pergunta, k=3, alpha=0.6, max_tokens=512):
+def responder_rag(pergunta, k=5, alpha=0.6):
     """
     Função principal do RAG:
       1. Recupera os k chunks mais relevantes

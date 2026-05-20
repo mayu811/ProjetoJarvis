@@ -1,6 +1,6 @@
 #chunking por parágrafo
 
-def chunking_paragrafo(texto: str, min_chars: int = 100) -> list[dict]:
+def chunking_paragrafo(texto: str, min_chars: int = 30) -> list[dict]:
     """
     Usa as quebras duplas de linha (\n\n) como separadores naturais.
     Remove parágrafos muito curtos (menos que min_chars caracteres).

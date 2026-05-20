@@ -19,8 +19,14 @@ function adicionarMensagem(texto, tipo) {
 
     const spanConteudo = document.createElement('span');
     spanConteudo.classList.add(tipo === 'sent' ? 'sent-content' : 'received-content');
-    spanConteudo.textContent = texto;
-
+    
+    // renderiza markdown só nas mensagens recebidas
+    if (tipo === 'received') {
+        spanConteudo.innerHTML = marked.parse(texto);
+    } else {
+        spanConteudo.textContent = texto;
+    }
+   
     const spanHora = document.createElement('span');
     spanHora.classList.add(tipo === 'sent' ? 'sent-time' : 'received-time');
     spanHora.textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -54,7 +60,7 @@ fileInput.addEventListener('change', async () => {
 let primeiraVez = true;
 
 window.addEventListener('load', () => {
-    adicionarMensagem('Olá! Como posso ajudar você hoje?', 'received');
+    adicionarMensagem('Olá! Sou seu agente virtual. Como posso ajudar você hoje? Ajudo na organização de atividades e compromissos, além de responder perguntas com base nos documentos que você enviar, mas respondo uma requisição por vez, então tenha paciência comigo 😅', 'received');
 });
 
 // Função para enviar mensagens

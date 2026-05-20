@@ -25,6 +25,12 @@ def indexar(novos_chunks: list[dict]):
 
     chunks_globais.extend(novos_chunks)
 
+    # debug temporário — remove depois
+    print(f"\n=== CHUNKS INDEXADOS ({len(novos_chunks)} novos) ===")
+    for c in novos_chunks:
+        print(f"  [{c['id']}] {c['texto'][:80]}")
+    print("===\n")
+
     # reconstrói BM25 com todos os chunks acumulados
     corpus_tokenizado = [tokenizar(c["texto"]) for c in chunks_globais]
     indice_bm25 = BM25Okapi(corpus_tokenizado)

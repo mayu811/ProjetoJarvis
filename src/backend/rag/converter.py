@@ -25,7 +25,14 @@ def converter_para_markdown(caminho_arquivo: str) -> str:
 
 def _pdf_para_texto(caminho: str) -> str:
     doc = fitz.open(caminho)
-    return "\n\n".join([pagina.get_text() for pagina in doc])
+    blocos = []
+    for pagina in doc:
+        # extrai blocos de texto individualmente
+        for bloco in pagina.get_text("blocks"):
+            texto = bloco[4].strip()  # índice 4 é o texto do bloco
+            if texto:
+                blocos.append(texto)
+    return "\n\n".join(blocos)
 
 def _docx_para_texto(caminho: str) -> str:
     doc = docx.Document(caminho)

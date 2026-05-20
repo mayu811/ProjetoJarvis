@@ -1,23 +1,25 @@
 """
-
-JSON schema de todas as tools (descrições detalhadas)
-
-Ainda discutivel a existencia desse arquivo, mas mantém aqui por enquanto
-
+Aqui definimos as ferramentas (tools) que o LLM pode usar, com suas descrições e parâmetros
 """
 
-#definitios.py
+# aqui definimos as ferramentas (tools) que o LLM pode usar, com suas descrições e parâmetros, 
+# e também implementamos as funções correspondentes que serão chamadas quando o LLM decidir usar uma ferramenta.
 
-from src.backend.db.queries import (
+#from src.backend.rag.retriever import recuperar_hibrido
+
+#importação das funções de consulta ao banco de dados
+'''from src.backend.db.queries import (
     adicionar_tarefa,
     listar_tarefas,
+    listar_tarefas_concluidas,
     concluir_tarefa,
     adicionar_compromisso,
-    consultar_agenda
+    consultar_agenda,
+    buscar_material_rag
 )
+'''
 
-from src.backend.rag.retriever import recuperar_hibrido
-
+'''
 # definição das tools no formato que a OpenAI espera
 TOOLS = [
     {
@@ -29,14 +31,15 @@ TOOLS = [
                 "type": "object",
                 "properties": {
                     "titulo": {"type": "string", "description": "Título da tarefa"},
-                    "prazo": {"type": "string", "description": "Prazo da tarefa no formato DD/MM/AAAA"},
+                    "prazo": {"type": "string", "description": "Prazo da tarefa no formato DD/MM/AAAA. Se sem informações, assuma o dia seguinte à data atual."},
                     "prioridade": {"type": "string", "enum": ["baixa", "media", "alta"]},
                     "descricao": {"type": "string", "description": "Descrição da tarefa"}
                 },
-                "required": ["titulo", "prazo", "prioridade", "descricao"]
+                "required": ["titulo", "prazo"]
             }
         }
     },
+
     {
         "type": "function",
         "function": {
@@ -45,6 +48,16 @@ TOOLS = [
             "parameters": {"type": "object", "properties": {}}
         }
     },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "listar_tarefas_concluidas",
+            "description": "Lista todas as tarefas concluídas do estudante.",
+            "parameters": {"type": "object", "properties": {}}
+        }
+    },
+
     {
         "type": "function",
         "function": {
@@ -63,11 +76,11 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "consultar_agenda",
-            "description": "Consulta os compromissos e eventos da agenda do estudante.",
+            "description": "Consulta os compromissos e eventos da agenda do estudante. Se vazio, retorna todos.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "data": {"type": "string", "description": "Data para consultar no formato DD/MM/AAAA. Se vazio, retorna todos."}
+                    "data": {"type": "string", "description": "Data para consultar no formato DD/MM/AAAA. "}
                 }
             }
         }
@@ -95,31 +108,27 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "titulo": {"type": "string", "description": "Título do compromisso"},
-                    "data": {"type": "string", "description": "Data do compromisso no formato DD/MM/AAAA"},
-                    "hora": {"type": "string", "description": "Hora do compromisso no formato HH:MM"},
+                    "titulo":    {"type": "string", "description": "Título do compromisso"},
+                    "data_hora": {"type": "string", "description": "Data e hora no formato DD/MM/AAAA HH:MM"},
                     "descricao": {"type": "string", "description": "Descrição do compromisso"},
-                    "local": {"type": "string", "description": "Local do compromisso"}
+                    "local":     {"type": "string", "description": "Local do compromisso"}
                 },
-                "required": ["titulo", "data", "hora", "descricao", "local"]
+                "required": ["titulo"]
             }
         }
     }
 ]
+'''
 
 
-
-# --------- implementação das funções (essas serão chamadas pelo LLM via JSON-RPC) ------------
-
-# função para buscar material relevante usando RAG
-def buscar_material_rag(pergunta: str) -> dict:
+# Função para buscar material relevante usando RAG
+    # foi deixada apenas esta função aqui pois ela não interage com o banco de dados, 
+    # enquanto as outras funções de tarefas e agenda estão em src/backend/db/queries.py 
+    # para manter a organização do código.
+'''def buscar_material_rag(pergunta: str) -> dict:
     resultados = recuperar_hibrido(pergunta)
     if not resultados:
         return {"ok": False, "mensagem": "Nenhum material encontrado."}
     contexto = "\n\n".join([r["texto"] for r in resultados])
     return {"ok": True, "contexto": contexto}
-
-# função para marcar compromisso na agenda
-def marcar_compromisso(titulo: str, data: str, hora: str, descricao: str = None, local: str = None) -> dict:
-    data_hora = f"{data} {hora}"
-    return adicionar_compromisso(titulo=titulo, data_hora=data_hora, descricao=descricao, local=local)
+'''
