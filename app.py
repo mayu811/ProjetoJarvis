@@ -38,9 +38,16 @@ def upload():
     os.makedirs('uploads', exist_ok=True)
     arquivo.save(caminho)
 
+    #ALTERAÇÕES AQUI - GPT
     markdown = converter_para_markdown(caminho)
-    chunks = chunking_paragrafo(markdown)
+    chunks = chunking_paragrafo(markdown, source=arquivo.filename)
     indexar(chunks)
+
+    # debug
+    from src.backend.rag.indexer import indice_faiss, indice_bm25, chunks_globais
+    print(f"Após upload — chunks: {len(chunks_globais)}, faiss: {indice_faiss}, bm25: {indice_bm25}")
+    
+    #=============
 
     return jsonify({
         'mensagem': f'{arquivo.filename} indexado com sucesso!',

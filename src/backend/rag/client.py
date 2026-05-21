@@ -19,6 +19,7 @@ from src.backend.db.queries import (
     listar_tarefas_concluidas,
     concluir_tarefa,
     adicionar_compromisso,
+    planejar_estudos,
     remover_compromisso,
     consultar_agenda,
     buscar_material_rag
@@ -39,7 +40,8 @@ mapa_funcoes = {
     "consultar_agenda":    consultar_agenda,
     "buscar_material_rag": buscar_material_rag,
     "adicionar_compromisso":  adicionar_compromisso,
-    "remover_compromisso": remover_compromisso
+    "remover_compromisso": remover_compromisso,
+    "planejar_estudos": planejar_estudos
 }
 
 def processar_mensagem(mensagem: str) -> str:
@@ -111,6 +113,8 @@ def processar_mensagem(mensagem: str) -> str:
         - adicionar_compromisso(titulo, data_hora, descricao, local): adiciona compromisso ou evento
         - remover_compromisso(titulo, data_hora): remove compromisso da agenda
         - buscar_material_rag(pergunta): busca informações nos documentos enviados
+        - planejar_estudos(pergunta): planeja estudos com base nas tarefas e materiais disponíveis
+    
 
 
         Responda APENAS com o JSON, sem texto adicional.
@@ -163,11 +167,21 @@ def processar_mensagem(mensagem: str) -> str:
 
                 resultado = funcao(**params)
 
-                # RAG já vem com resposta formulada
+                '''# RAG já vem com resposta formulada
                 if action == "buscar_material_rag":
                     resultados.append({"action": action, "resultado": resultado.get("contexto") if resultado.get("ok") else resultado.get("mensagem")})
                 else:
-                    resultados.append({"action": action, "resultado": resultado})
+                    resultados.append({"action": action, "resultado": resultado})'''
+                
+                # RAG e planejamento já vêm com resposta formulada — retorna direto
+                if action in ("buscar_material_rag", "planejar_estudos"):
+                    if resultado.get("ok"):
+                        return resultado.get("contexto")
+                    else:
+                        return resultado.get("mensagem")
+
+                # para as demais funções, acumula no resultados normalmente
+                resultados.append({"action": action, "resultado": resultado})
 
             # acumula no histórico
             historico.append({"role": "assistant", "content": conteudo})

@@ -149,15 +149,82 @@ def consultar_agenda(data: str = None) -> dict:
     contexto = "\n\n".join([r["texto"] for r in resultados])
     return {"ok": True, "contexto": contexto}'''
 
-def buscar_material_rag(pergunta: str) -> dict:    
+'''def buscar_material_rag(pergunta: str) -> dict:    
 
     # verifica se há documentos indexados
-    if indice_bm25 is None:
-        return {"ok": False, "mensagem": "Nenhum documento foi enviado ainda. Envie um arquivo primeiro."}
+    # verifica ambos
+    from src.backend.rag.indexer import indice_bm25, indice_faiss #novo
 
+    if indice_bm25 is None or indice_faiss is None: #novo
+        return {"ok": False, "mensagem": "Nenhum documento foi enviado ainda. Envie um arquivo primeiro."} #novo
+    
     resposta, docs = responder_rag(pergunta)
 
     if not docs:
         return {"ok": False, "mensagem": "Nenhum material encontrado nos documentos."}
 
     return {"ok": True, "contexto": resposta}
+'''
+def buscar_material_rag(pergunta: str) -> dict:
+    import src.backend.rag.indexer as indexer  # importa o módulo, não a variável
+
+    if indexer.indice_faiss is None or indexer.indice_bm25 is None:
+        return {"ok": False, "mensagem": "Nenhum documento foi enviado ainda. Envie um arquivo primeiro."}
+
+    from src.backend.rag.generator import responder_rag
+    resposta, docs = responder_rag(pergunta, k=10)
+
+    print(f"\n=== BUSCAR_MATERIAL_RAG ===")
+    print(f"Resposta do generator: {resposta[:200]}")
+    print(f"Docs: {len(docs)}")
+    print("===\n")
+
+    if not docs:
+        return {"ok": False, "mensagem": "Nenhum material encontrado nos documentos."}
+
+    return {"ok": True, "contexto": resposta}
+
+
+def planejar_estudos(pergunta: str) -> dict:
+    from src.backend.rag.indexer import indice_faiss
+    from src.backend.rag.generator import responder_rag, client
+    from src.backend.db.queries import listar_tarefas, consultar_agenda
+    import json
+
+    tarefas = listar_tarefas()
+    agenda = consultar_agenda()
+
+    contexto_rag = None
+    if indice_faiss is not None:
+        resposta_rag, docs = responder_rag(pergunta, k=10)
+        if docs:
+            contexto_rag = resposta_rag
+
+    resp = client.chat.completions.create(
+        model='google/gemma-3-12b-it',
+        messages=[
+            {
+                "role": "system",
+                "content": """Você é um assistente acadêmico especializado em planejamento de estudos.
+                Com base nas tarefas pendentes, agenda e materiais fornecidos, monte um plano de estudos claro e objetivo.
+                Use markdown para formatar. Seja específico e prático."""
+                            },
+                            {
+                                "role": "user",
+                                "content": f"""
+                Solicitação: {pergunta}
+
+                Tarefas pendentes:
+                {json.dumps(tarefas, ensure_ascii=False)}
+
+                Agenda:
+                {json.dumps(agenda, ensure_ascii=False)}
+
+                Conteúdo dos documentos relevantes:
+                {contexto_rag or "Nenhum documento enviado."}
+                """
+            }
+        ]
+    )
+
+    return {"ok": True, "contexto": resp.choices[0].message.content}

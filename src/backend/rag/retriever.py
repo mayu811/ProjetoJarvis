@@ -10,26 +10,60 @@ def normalizar(v):
         return np.zeros_like(v)
     return (v - v.min()) / delta
 
-def recuperar_hibrido(pergunta, k=3, alpha=0.6):
-    """
-    Combina BM25 e semântico.
-    alpha = peso do semântico (0 = só BM25, 1 = só semântico, 0.6 = padrão)
-    """
+'''
+def recuperar_hibrido(pergunta: str, k: int = 3, alpha: float = 0.6) -> list:
+    # busca semântica via FAISS — não recalcula embeddings
+    q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")
+    scores_dense, indices_faiss = indexer.indice_faiss.search(q, len(indexer.chunks_globais))
+
+    sd = normalizar(scores_dense[0])
+
+    # busca lexical via BM25
     sb = normalizar(indexer.indice_bm25.get_scores(indexer.tokenizar(pergunta)))
 
-    q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")
-
-    # matriz_emb reconstruída a partir dos chunks indexados
-    matriz_emb = indexer.modelo_embed.encode(
-        [c["texto"] for c in indexer.chunks_globais],
-        normalize_embeddings=True
-    ).astype("float32")
-
-    sd = normalizar(np.dot(matriz_emb, q[0]))
     score_final = alpha * sd + (1.0 - alpha) * sb
     idx = np.argsort(score_final)[::-1][:k]
 
     return [
-        {"id": indexer.chunks_globais[i]["id"], "texto": indexer.chunks_globais[i]["texto"], "score": float(score_final[i])}
+        {
+            "id": indexer.chunks_globais[i]["id"],
+            "texto": indexer.chunks_globais[i]["texto"],
+            "source": indexer.chunks_globais[i].get("source", "desconhecido"),
+            "score": float(score_final[i])
+        }
         for i in idx
-    ]
+    ]'''
+
+
+def recuperar_hibrido(pergunta: str, k: int = 10, alpha: float = 0.6, max_por_source: int = 3) -> list:
+    q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")
+    scores_dense, indices_faiss = indexer.indice_faiss.search(q, len(indexer.chunks_globais))
+
+    sd = normalizar(scores_dense[0])
+    sb = normalizar(indexer.indice_bm25.get_scores(indexer.tokenizar(pergunta)))
+
+    score_final = alpha * sd + (1.0 - alpha) * sb
+    idx = np.argsort(score_final)[::-1]
+
+    # limita chunks por documento
+    docs_finais = []
+    sources_count = {}
+
+    for i in idx:
+        source = indexer.chunks_globais[i].get("source", "desconhecido")
+
+        if sources_count.get(source, 0) >= max_por_source:
+            continue
+
+        docs_finais.append({
+            "id": indexer.chunks_globais[i]["id"],
+            "texto": indexer.chunks_globais[i]["texto"],
+            "source": source,
+            "score": float(score_final[i])
+        })
+        sources_count[source] = sources_count.get(source, 0) + 1
+
+        if len(docs_finais) >= k:
+            break
+
+    return docs_finais
