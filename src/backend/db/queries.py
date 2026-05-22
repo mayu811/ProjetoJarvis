@@ -110,6 +110,32 @@ def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, lo
     conn.close()
     return {"ok": True, "mensagem": f"Compromisso '{titulo}' adicionado com sucesso."}
 
+#COMPROMISSOS IMPORTADOS DE ARQUIVOS JSON
+def importar_agenda_JSON(arquivo: JSON) -> dict:
+    compromisso = arquivo
+    conn = get_connection()
+    cursor = conn.cursor()
+
+
+    cursor.execute(
+        "INSERT INTO compromissos (titulo, descricao, data_hora, local) VALUES (?, ?, ?)",
+        (compromisso.titulo, compromisso.descricao, 
+        compromisso.data_hora, compromisso.local)
+    )
+    conn.commit()
+    conn.close()
+    return {"ok": True, "mensagem": f"Compromisso '{titulo}' adicionada com sucesso na agenda."}
+
+    '''
+    AGENDA = {
+        "id": 
+        "titulo":
+        "descricao":
+        "data_hora": 
+        "local":
+    }
+    '''
+
 
 def remover_compromisso(titulo: str) -> dict:
     conn = get_connection()
