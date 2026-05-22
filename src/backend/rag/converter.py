@@ -4,8 +4,10 @@ import fitz  # pymupdf
 import docx
 
 def converter_para_markdown(caminho_arquivo: str) -> str:
+    # extrai a extensão do arquivo para determinar o método de conversão
     extensao = Path(caminho_arquivo).suffix.lower()
 
+    # converte o arquivo para markdown
     if extensao == '.pdf':
         texto = _pdf_para_texto(caminho_arquivo)
     elif extensao == '.txt':
@@ -17,11 +19,17 @@ def converter_para_markdown(caminho_arquivo: str) -> str:
 
     # salva o .md gerado
     caminho_md = str(Path(caminho_arquivo).with_suffix('.md'))
-    Path(caminho_md).write_text(texto, encoding='utf-8')
+    # escreve o texto convertido no arquivo .md
+    Path(caminho_md).write_text(texto, encoding='utf-8') 
 
+    # remove o arquivo original (em PDF) para evitar acúmulo de arquivos
     os.remove(caminho_arquivo)
 
+    # retorna o texto convertido para que possa ser processado diretamente
     return texto
+
+
+# ------------ CONVERSORES ESPECÍFICOS PARA CADA FORMATO --------------
 
 def _pdf_para_texto(caminho: str) -> str:
     doc = fitz.open(caminho)

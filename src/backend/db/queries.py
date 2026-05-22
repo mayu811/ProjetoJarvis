@@ -28,6 +28,8 @@ from src.backend.rag.retriever import recuperar_hibrido
 from src.backend.rag.indexer import indice_bm25
 from src.backend.rag.generator import responder_rag
 
+# ---------------------- TAREFAS ----------------------
+
 def adicionar_tarefa(titulo: str, prazo: str = None, prioridade: str = "baixa") -> dict:
 
     conn = get_connection()
@@ -84,14 +86,16 @@ def concluir_tarefa(titulo: str) -> dict:
     # marca a tarefa como concluída, comparando o título de forma case-insensitive
     cursor.execute("UPDATE tarefas SET concluida = 1 WHERE LOWER(titulo) = LOWER(?)", (titulo,))
     conn.commit()
+
     alteradas = cursor.rowcount # número de linhas alteradas, para verificar se a tarefa foi encontrada
     conn.close()
+
     # se nenhuma linha foi alterada, significa que a tarefa não foi encontrada
     if alteradas == 0:
         return {"ok": False, "mensagem": f"Tarefa '{titulo}' não encontrada."}
     return {"ok": True, "mensagem": f"Tarefa '{titulo}' concluída."}
 
-
+# ---------------------- COMPROMISSOS ----------------------
 
 def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, local: str = None) -> dict:
 
@@ -105,6 +109,7 @@ def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, lo
     conn.commit()
     conn.close()
     return {"ok": True, "mensagem": f"Compromisso '{titulo}' adicionado com sucesso."}
+
 
 def remover_compromisso(titulo: str) -> dict:
     conn = get_connection()
@@ -165,6 +170,9 @@ def consultar_agenda(data: str = None) -> dict:
 
     return {"ok": True, "contexto": resposta}
 '''
+
+# ---------------------- FUNCOES RAGS ----------------------
+
 def buscar_material_rag(pergunta: str) -> dict:
     import src.backend.rag.indexer as indexer  # importa o módulo, não a variável
 
@@ -208,10 +216,11 @@ def planejar_estudos(pergunta: str) -> dict:
                 "content": """Você é um assistente acadêmico especializado em planejamento de estudos.
                 Com base nas tarefas pendentes, agenda e materiais fornecidos, monte um plano de estudos claro e objetivo.
                 Use markdown para formatar. Seja específico e prático."""
-                            },
-                            {
-                                "role": "user",
-                                "content": f"""
+            },
+            
+            {
+                "role": "user",
+                "content": f"""
                 Solicitação: {pergunta}
 
                 Tarefas pendentes:

@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import sys
 
+# adiciona o diretório raiz do projeto ao sys.path para permitir imports relativos
 sys.path.insert(0, '.')
 
 from src.backend.db.database import inicializar_banco
@@ -17,10 +18,15 @@ app = Flask(__name__,
             template_folder='src/templates',
             static_folder='src/static')
 
+# rotas da aplicação ================================
+
+# rota para a página inicial
 @app.route('/')
 def index():
     return render_template("index.html")
 
+
+#rota para upload de arquivos e indexação
 @app.route('/upload', methods=['POST'])
 def upload():
     arquivo = request.files.get('arquivo')
@@ -35,6 +41,7 @@ def upload():
 
     # salva o arquivo
     caminho = f'uploads/{arquivo.filename}'
+    # garante que a pasta de uploads exista
     os.makedirs('uploads', exist_ok=True)
     arquivo.save(caminho)
 
@@ -54,7 +61,7 @@ def upload():
         'chunks': len(chunks)
     })    
 
-
+#rota para processar mensagens do usuário e gerar respostas
 @app.route('/chat', methods=['POST'])
 def chat():
     dados = request.get_json()
@@ -62,5 +69,6 @@ def chat():
     resposta = processar_mensagem(mensagem)    
     return jsonify({'resposta': resposta})
 
+# da run no app Flask em modo debug para facilitar o desenvolvimento
 if __name__ == '__main__':
     app.run(debug=True)

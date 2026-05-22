@@ -14,15 +14,15 @@ from openai import OpenAI
 
 #importação das funções que compõem o tool calling
 from src.backend.db.queries import (
-    adicionar_tarefa,
-    listar_tarefas,
-    listar_tarefas_concluidas,
-    concluir_tarefa,
-    adicionar_compromisso,
-    planejar_estudos,
-    remover_compromisso,
-    consultar_agenda,
-    buscar_material_rag
+    adicionar_tarefa, #adiciona uma tarefa à lista de tarefas pendentes
+    listar_tarefas, #lista as tarefas pendentes -> com a coluna concluida = 0
+    listar_tarefas_concluidas, #lista as tarefas concluídas -> com a coluna concluida = 1
+    concluir_tarefa, # seta uma tarefa para concluida (concluida = 1)
+    adicionar_compromisso, #adiciona um compromisso à agenda do usuário
+    planejar_estudos, #adicionado um novo agente com contexto injetado
+    remover_compromisso, #remove um compromisso da agenda do usuário
+    consultar_agenda, #consulta os compromissos agendados para uma data específica ou para o futuro
+    buscar_material_rag #busca informações nos documentos enviados, para responder perguntas do usuário
 )
 
 
@@ -42,7 +42,10 @@ mapa_funcoes = {
     "adicionar_compromisso":  adicionar_compromisso,
     "remover_compromisso": remover_compromisso,
     "planejar_estudos": planejar_estudos
+    #"importar_agenda_pdf": importar_agenda_pdf # função para extrair compromissos de um PDF de agenda, ainda não implementada
+    # se tiver mais funções, adicionar aqui
 }
+
 
 def processar_mensagem(mensagem: str) -> str:
     data_atual = datetime.now().strftime("%d/%m/%Y")
@@ -125,6 +128,7 @@ def processar_mensagem(mensagem: str) -> str:
         {"role": "user",   "content": mensagem}
     ]
 
+    # para evitar loops infinitos, limitamos o número de turnos de interação com a LLM. Se chegar no limite, encerramos a conversa.
     MAX_TURNOS = 6
 
     for turno in range(MAX_TURNOS):
