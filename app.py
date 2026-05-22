@@ -34,11 +34,20 @@ def upload():
         return jsonify({'erro': 'Nenhum arquivo enviado'}), 400
 
     # valida extensão
-    extensoes_permitidas = {'.pdf', '.txt', '.docx'}
+    extensoes_permitidas = {'.pdf', '.txt', '.docx'} #'.JSON'}
     extensao = Path(arquivo.filename).suffix.lower()
     if extensao not in extensoes_permitidas:
         return jsonify({'erro': f'Formato {extensao} não suportado'}), 400
 
+    '''
+    Adiciona separadamente os arquivos agenda dos demais documentos
+
+    if arquivo.suffix == ".JSON":
+        caminho_agenda = f'uploads/agendas/{aquivo.filename}'
+        os.makedirs('uploads/agendas', exist_ok = True)
+        arquivo.save(caminho_agenda)
+    '''
+            
     # salva o arquivo
     caminho = f'uploads/{arquivo.filename}'
     # garante que a pasta de uploads exista
