@@ -18,7 +18,7 @@ app = Flask(__name__,
             template_folder='src/templates',
             static_folder='src/static')
 
-# rotas da aplicação ================================
+# --------------- ROTAS DO FLASK ---------------
 
 # rota para a página inicial
 @app.route('/')
@@ -37,16 +37,17 @@ def upload():
     extensoes_permitidas = {'.pdf', '.txt', '.docx'}
     extensao = Path(arquivo.filename).suffix.lower()
 
+    #se a extensão do arquivo não for permitida, retorna erro
     if extensao not in extensoes_permitidas:
         return jsonify({'erro': f'Formato {extensao} não suportado'}), 400
 
-    # salva o arquivo
+    # salva o arquivo no diretorio certo
     caminho = f'src/uploads/{arquivo.filename}'
     # garante que a pasta de uploads exista
     os.makedirs('src/uploads', exist_ok=True)
     arquivo.save(caminho)
 
-    #ALTERAÇÕES AQUI - GPT
+    # converte para markdown, gera chunks e indexa
     markdown = converter_para_markdown(caminho)
     chunks = chunking_paragrafo(markdown, source=arquivo.filename)
     indexar(chunks)

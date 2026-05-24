@@ -1,6 +1,6 @@
 '''
     Aqui estabelecemos a conexão com a API da LLM
-    Além disso, definimos a função processar_mensagem, que recebe a mensagem do usuário, 
+    Além disso, definimos a função processar_mensagem, que recebe a mensagem do usuário pelo frontend, 
     envia para a LLM, interpreta a resposta, chama a função correspondente e depois envia 
     o resultado de volta para a LLM formaliza-la.
 
@@ -46,11 +46,12 @@ mapa_funcoes = {
     "remover_compromisso": remover_compromisso,
     "planejar_estudos": planejar_estudos,
     "importar_agenda_json": importar_agenda_json
-    # se tiver mais funções, adicionar aqui
 }
 
 
 def processar_mensagem(mensagem: str) -> str:
+    # para dar um contexto temporal para a LLM, injetamos a data e hora atuais no prompt
+    #para se basear na hora de adicionar tarefas e compromissos
     data_atual = datetime.now().strftime("%d/%m/%Y")
     hora_atual = datetime.now().strftime("%H:%M")
 
@@ -60,6 +61,8 @@ def processar_mensagem(mensagem: str) -> str:
         info_documentos = f"Há {len(chunks_globais)} trechos de documentos indexados e disponíveis para consulta. Use buscar_material_rag para responder perguntas sobre eles."
     else:
         info_documentos = "Nenhum documento foi enviado ainda."
+
+    # o SYSTEM_PROMPT é a mensagem de sistema que define o comportamento do agente
 
     SYSTEM_PROMPT = f"""
         Você é o Jarvis, um assistente acadêmico inteligente.
@@ -122,8 +125,6 @@ def processar_mensagem(mensagem: str) -> str:
         - buscar_material_rag(pergunta): busca informações nos documentos enviados
         - planejar_estudos(pergunta): planeja estudos com base nas tarefas e materiais disponíveis
     
-
-
         Responda APENAS com o JSON, sem texto adicional.
         """
 
@@ -132,7 +133,8 @@ def processar_mensagem(mensagem: str) -> str:
         {"role": "user",   "content": mensagem}
     ]
 
-    # para evitar loops infinitos, limitamos o número de turnos de interação com a LLM. Se chegar no limite, encerramos a conversa.
+    # para evitar loops infinitos, limitamos o número de turnos de interação com a LLM
+    # Se chegar no limite, encerramos a conversa.
     MAX_TURNOS = 6
 
     for turno in range(MAX_TURNOS):
@@ -174,12 +176,6 @@ def processar_mensagem(mensagem: str) -> str:
                     continue
 
                 resultado = funcao(**params)
-
-                '''# RAG já vem com resposta formulada
-                if action == "buscar_material_rag":
-                    resultados.append({"action": action, "resultado": resultado.get("contexto") if resultado.get("ok") else resultado.get("mensagem")})
-                else:
-                    resultados.append({"action": action, "resultado": resultado})'''
                 
                 # RAG e planejamento já vêm com resposta formulada — retorna direto
                 if action in ("buscar_material_rag", "planejar_estudos"):

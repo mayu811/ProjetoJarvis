@@ -9,7 +9,7 @@ client = OpenAI(base_url='https://llm.liaufms.org/v1/gemma-3-12b-it', api_key='C
 
 #print(resp.choices[0].message.content)
 
-
+# função para construir o prompt a partir da pergunta e dos documentos recuperados
 def construir_prompt(pergunta, docs):
     """
     Monta o conteúdo da mensagem do usuário enviada ao LLM.
@@ -26,37 +26,7 @@ def construir_prompt(pergunta, docs):
         f"Pergunta: {pergunta}"
     )
 
-'''
-def responder_rag(pergunta: str, k: int=5, alpha: float=0.6) -> tuple:
-
-    # ── Passo 1: Recuperação ──
-    docs = recuperar_hibrido(pergunta, k=k, alpha=alpha)
-
-     # LINHAS NOVAS ADICIONADAS (GPT) - DEBUG
-
-    print(f"k={k} | chunks usados: {len(docs)}")
-
-    print(f"\n=== RAG DEBUG ===")
-    print(f"Pergunta: {pergunta}")
-    print(f"Docs encontrados: {len(docs)}")
-    for d in docs:
-        print(f"  [{d['source']}] score={d['score']:.3f} | {d['texto'][:60]}")
-    print("===\n")
-    # =============
-
-    # ── Passo 2: Construção do prompt via chat template ──
-    conteudo = construir_prompt(pergunta, docs)
-    messages = [{"role": "user", "content": conteudo}]
-
-    resp = client.chat.completions.create(
-        model='google/gemma-3-12b-it',
-        messages=messages,
-    )
-
-    return resp.choices[0].message.content, docs
-
-#print("Pipeline RAG pronto!")'''
-
+# função principal para gerar resposta usando RAG
 def responder_rag(pergunta: str, k: int = 10, alpha: float = 0.6) -> tuple:
     docs = recuperar_hibrido(pergunta, k=k, alpha=alpha)
 

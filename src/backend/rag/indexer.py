@@ -1,3 +1,4 @@
+
 # indexação hibrida: FAISS + BM25
 import re
 import faiss
@@ -16,16 +17,14 @@ indice_faiss = None
 embeddings_globais = None
 
 # ── Índice BM25 (lexical) ─────────────────────────────────────────────────────
-# Tokeniza cada chunk em lista de palavras (tudo em minúsculo, só alfanumérico)
 
+# Tokeniza cada chunk em lista de palavras (tudo em minúsculo, só alfanumérico)
 def tokenizar(texto: str) -> list[str]:
     return re.findall(r"\w+", texto.lower())
 
 def indexar(novos_chunks: list[dict]):
     global chunks_globais, indice_bm25, indice_faiss, embeddings_globais
-
-    
-
+    # adiciona os novos chunks à lista global
     chunks_globais.extend(novos_chunks)
 
     # debug temporário — remove depois
