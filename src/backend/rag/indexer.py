@@ -41,12 +41,12 @@ def indexar(novos_chunks: list[dict]):
     chunks_globais.extend(novos_chunks)
 
     # BM25
-    print(f"[INDEXER] Ferramenta: BM25Okapi | Reconstruindo índice lexical...")
+    
     corpus_tokenizado = [tokenizar(c["texto"]) for c in chunks_globais]
     indice_bm25 = BM25Okapi(corpus_tokenizado)
 
     # FAISS
-    print(f"[INDEXER] Ferramenta: FAISS + SentenceTransformer | Gerando embeddings...")
+    
     textos = [c["texto"] for c in chunks_globais]
     matriz_emb = modelo_embed.encode(
         textos,
@@ -59,4 +59,4 @@ def indexar(novos_chunks: list[dict]):
     indice_faiss = faiss.IndexFlatIP(dim)
     indice_faiss.add(matriz_emb)
 
-    print(f"[INDEXER] Saída: índice atualizado com {len(chunks_globais)} chunks totais | dim={dim}")
+    print(f"[INDEXER] {len(novos_chunks)} chunks novos | total: {len(chunks_globais)}")

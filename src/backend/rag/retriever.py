@@ -60,8 +60,7 @@ def recuperar_hibrido(pergunta: str, k: int = 15, alpha: float = 0.6, max_por_so
         if len(docs_finais) >= k:
             break
 
-    print(f"[RETRIEVER] Saída: {len(docs_finais)} chunks recuperados")
-    for d in docs_finais:
-        print(f"  [{d['source']}] score={d['score']:.3f} | {d['texto'][:60]}")
-
+    #
+    print(f"[RETRIEVER] {len(docs_finais)} chunks | sources: { {s: c for s, c in sources_count.items()} }")
+    
     return docs_finais

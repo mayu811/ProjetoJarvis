@@ -14,10 +14,20 @@ from src.backend.rag.chunker import chunking_paragrafo
 from src.backend.rag.indexer import indexar
 from src.backend.rag.client import processar_mensagem
 import src.backend.rag.indexer as indexer  # importa o módulo para acessar valores atuais
-from src.backend.tools.functions import precarregar_documentos
+
 
 #inicialização do banco:
 inicializar_banco()
+
+'''
+
+# função que será implementada futuramente...
+from src.backend.tools.functions import precarregar_documentos
+
+precarregar_documentos(dataset)
+
+'''
+
 
 app = Flask(__name__,
             template_folder='src/templates',

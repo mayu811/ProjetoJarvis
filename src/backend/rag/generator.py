@@ -17,9 +17,6 @@ def responder_rag(pergunta: str, k: int = 10, alpha: float = 0.6) -> tuple:
         2. Monta o prompt com o contexto usando o chat template do Qwen2.5
         3. Gera a resposta com o LLM
     '''
-    print(f"\n[GENERATOR] Entrada: pergunta='{pergunta}' | k={k}")
-    print(f"[GENERATOR] Ferramenta: Gemma-3-12b-it (LLM) + recuperar_hibrido (RAG)")
-
     docs = recuperar_hibrido(pergunta, k=k, alpha=alpha)
 
     if not docs:
@@ -36,7 +33,6 @@ def responder_rag(pergunta: str, k: int = 10, alpha: float = 0.6) -> tuple:
     sources = {}
     for d in docs:
         sources[d['source']] = sources.get(d['source'], 0) + 1
-    print(f"[GENERATOR] Sources usados: { {s: c for s, c in sources.items()} }")
 
     resp = client.chat.completions.create(
         model='google/gemma-3-12b-it',
@@ -46,9 +42,8 @@ def responder_rag(pergunta: str, k: int = 10, alpha: float = 0.6) -> tuple:
                 "content": """Você é um assistente especializado em responder perguntas com base em documentos acadêmicos.
                 Regras:
                 - Responda APENAS com base nos trechos fornecidos.
-                - Se a informação vier de documentos diferentes, deixe claro qual documento contém cada informação.
                 - Se não encontrar a informação nos trechos, diga exatamente: "Não encontrei essa informação nos documentos enviados."
-                - Nunca invente informações.
+                - NUNCA invente informações.
                 - Responda em português usando markdown."""
             },
             {
@@ -59,6 +54,6 @@ def responder_rag(pergunta: str, k: int = 10, alpha: float = 0.6) -> tuple:
     )
 
     resposta = resp.choices[0].message.content
-    print(f"[GENERATOR] Saída: {len(resposta)} caracteres gerados")
+    print(f"[GENERATOR] sources: {sources} | {len(resposta)} chars")
 
     return resposta, docs
