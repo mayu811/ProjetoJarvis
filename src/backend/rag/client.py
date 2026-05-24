@@ -1,18 +1,17 @@
 '''
-    Aqui estabelecemos a conexão com a API da LLM
     Além disso, definimos a função processar_mensagem, que recebe a mensagem do usuário pelo frontend, 
     envia para a LLM, interpreta a resposta, chama a função correspondente e depois envia 
     o resultado de volta para a LLM formaliza-la.
 
 '''
-
-#chama a API do LLM para obter respostas
 from datetime import datetime
 import json
-from openai import OpenAI
 
 #importação das funções de chunking e indexação
 from src.backend.rag.indexer import chunks_globais
+
+# import do cliente para acessar a API do LLM
+from src.backend.rag.connection import client
 
 #importação das funções que compõem o tool calling
 from src.backend.tools.functions import (
@@ -29,11 +28,6 @@ from src.backend.tools.functions import (
 )
 
 
-# cliente para acessar a API do LLM (configurado para usar o modelo Gemma-3.12b-it hospedado no LIA)
-client = OpenAI(
-    base_url='https://llm.liaufms.org/v1/gemma-3-12b-it',
-    api_key='Cxt2ftLF7d3mHS2JdiFqB-eSDAQeZvFATPXPs02lV9A'
-)
 
 mapa_funcoes = {
     "adicionar_tarefa":    adicionar_tarefa,
@@ -130,7 +124,6 @@ def processar_mensagem(mensagem: str) -> str:
         - buscar_material_rag(pergunta): busca informações nos documentos enviados 
         - planejar_estudos(pergunta): planeja estudos com base nas tarefas e materiais disponíveis
     
-        Responda APENAS com o JSON, sem texto adicional.
         """
 
     historico = [

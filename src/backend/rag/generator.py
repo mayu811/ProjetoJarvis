@@ -1,6 +1,6 @@
 #geração final de resposta usando LLM + contexto relevante
 from src.backend.rag.retriever import recuperar_hibrido
-from src.backend.rag.client import client
+from src.backend.rag.connection import client
 
 
 # função para construir o prompt a partir da pergunta e dos documentos recuperados

@@ -9,10 +9,6 @@
 # funções para interagir com o banco de dados (SQLite)
 from src.backend.db.database import get_connection
 
-#dependencias para interagir com a função que utiliza RAG
-from src.backend.rag.retriever import recuperar_hibrido
-from src.backend.rag.indexer import indice_bm25
-from src.backend.rag.generator import responder_rag
 
 #importação do módulo de indexação para verificar se os índices estão prontos antes de tentar recuperar material
 import src.backend.rag.indexer as indexer  # importa o módulo, não a variável
@@ -22,7 +18,8 @@ from src.backend.rag.generator import responder_rag
 
 #importação do cliente para usar a função de resposta RAG dentro da função planejar_estudos
 from src.backend.rag.indexer import indice_faiss
-from src.backend.rag.generator import responder_rag, client
+from src.backend.rag.generator import responder_rag
+from src.backend.rag.connection import client
 import json
 
 

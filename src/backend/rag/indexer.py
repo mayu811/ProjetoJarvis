@@ -22,33 +22,33 @@ embeddings_globais = None
 def tokenizar(texto: str) -> list[str]:
     return re.findall(r"\w+", texto.lower())
 
+
 def indexar(novos_chunks: list[dict]):
     global chunks_globais, indice_bm25, indice_faiss, embeddings_globais
-    # adiciona os novos chunks à lista global
-    chunks_globais.extend(novos_chunks)
 
-    # debug temporário — remove depois
-    print(f"\n=== CHUNKS INDEXADOS ({len(novos_chunks)} novos) ===")
+    print(f"\n[INDEXER] Entrada: {len(novos_chunks)} novos chunks")
     for c in novos_chunks:
         print(f"  [{c['id']}] [{c['source']}] {c['texto'][:60]}")
 
-    # reconstrói BM25 com todos os chunks acumulados
+    chunks_globais.extend(novos_chunks)
+
+    # BM25
+    print(f"[INDEXER] Ferramenta: BM25Okapi | Reconstruindo índice lexical...")
     corpus_tokenizado = [tokenizar(c["texto"]) for c in chunks_globais]
     indice_bm25 = BM25Okapi(corpus_tokenizado)
 
-    # reconstrói FAISS com todos os chunks acumulados
+    # FAISS
+    print(f"[INDEXER] Ferramenta: FAISS + SentenceTransformer | Gerando embeddings...")
     textos = [c["texto"] for c in chunks_globais]
     matriz_emb = modelo_embed.encode(
         textos,
         normalize_embeddings=True,
         show_progress_bar=True,
     ).astype("float32")
-    
-    #LINHA NOVA ADICIONADA (GPT)
-    embeddings_globais = matriz_emb
 
+    embeddings_globais = matriz_emb
     dim = matriz_emb.shape[1]
     indice_faiss = faiss.IndexFlatIP(dim)
     indice_faiss.add(matriz_emb)
 
-    print(f"Índice atualizado: {len(chunks_globais)} chunks totais.")
+    print(f"[INDEXER] Saída: índice atualizado com {len(chunks_globais)} chunks totais | dim={dim}")
