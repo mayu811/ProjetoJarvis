@@ -1,8 +1,16 @@
+'''
+    Módulo de conversão de arquivos para texto (markdown) para o processo de RAG.
+    Suporta PDF, DOCX e TXT. O texto convertido é salvo como .md e o 
+    arquivo original é removido para evitar acúmulo. 
+'''
+# ----------------- IMPORTAÇÕES -----------------
 from pathlib import Path
 import os
 import fitz  # pymupdf
 import docx
 
+
+# ----------------- FUNÇÃO PRINCIPAL -----------------
 def converter_para_markdown(caminho_arquivo: str) -> str:
     # extrai a extensão do arquivo para determinar o método de conversão
     extensao = Path(caminho_arquivo).suffix.lower()

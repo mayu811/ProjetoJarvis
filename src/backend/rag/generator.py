@@ -1,30 +1,29 @@
-#geração final de resposta usando LLM + contexto relevante
+'''
+    Módulo de geração de respostas usando RAG (Retrieval-Augmented Generation).
+    Recebe a pergunta do usuário, recupera os documentos relevantes usando o retriever híbrido ( BM25 + embedding (dense))
+
+'''
+
+# ---------------------- IMPORTAÇÕES --------------------------
 from src.backend.rag.retriever import recuperar_hibrido
 from src.backend.rag.connection import client
 
 
-# função para construir o prompt a partir da pergunta e dos documentos recuperados
-def construir_prompt(pergunta, docs):
-    """
-    Monta o conteúdo da mensagem do usuário enviada ao LLM.
-    O modelo deve responder APENAS com base no contexto fornecido.
-    """
-
-    contexto = "\n\n".join(
-        [f"Trecho {i+1}:\n{d['texto']}" for i, d in enumerate(docs)]
-    )
-    return (
-        "Responda em portugues usando apenas o contexto abaixo. "
-        "Se nao houver informacao suficiente, diga: nao encontrado no contexto.\n\n"
-        f"Contexto:\n{contexto}\n\n"
-        f"Pergunta: {pergunta}"
-    )
-
-# função principal para gerar resposta usando RAG
+#
 def responder_rag(pergunta: str, k: int = 10, alpha: float = 0.6) -> tuple:
+    '''
+        Função principal do RAG:
+        1. Recupera os k chunks mais relevantes
+        2. Monta o prompt com o contexto usando o chat template do Qwen2.5
+        3. Gera a resposta com o LLM
+    '''
+    print(f"\n[GENERATOR] Entrada: pergunta='{pergunta}' | k={k}")
+    print(f"[GENERATOR] Ferramenta: Gemma-3-12b-it (LLM) + recuperar_hibrido (RAG)")
+
     docs = recuperar_hibrido(pergunta, k=k, alpha=alpha)
 
     if not docs:
+        print(f"[GENERATOR] Saída: nenhum documento encontrado")
         return "Nenhum material encontrado nos documentos.", docs
 
     # monta contexto com source explícito
@@ -33,17 +32,24 @@ def responder_rag(pergunta: str, k: int = 10, alpha: float = 0.6) -> tuple:
         for d in docs
     ])
 
+    # sources usados
+    sources = {}
+    for d in docs:
+        sources[d['source']] = sources.get(d['source'], 0) + 1
+    print(f"[GENERATOR] Sources usados: { {s: c for s, c in sources.items()} }")
+
     resp = client.chat.completions.create(
         model='google/gemma-3-12b-it',
         messages=[
             {
                 "role": "system",
-                "content": """Você é um assistente especializado em responder perguntas com base em documentos acadêmicos.                    Regras:
-                    - Responda APENAS com base nos trechos fornecidos.
-                    - Se a informação vier de documentos diferentes, deixe claro qual documento contém cada informação.
-                    - Se não encontrar a informação nos trechos, diga exatamente: "Não encontrei essa informação nos documentos enviados."
-                    - Nunca invente informações.
-                    - Responda em português usando markdown."""
+                "content": """Você é um assistente especializado em responder perguntas com base em documentos acadêmicos.
+                Regras:
+                - Responda APENAS com base nos trechos fornecidos.
+                - Se a informação vier de documentos diferentes, deixe claro qual documento contém cada informação.
+                - Se não encontrar a informação nos trechos, diga exatamente: "Não encontrei essa informação nos documentos enviados."
+                - Nunca invente informações.
+                - Responda em português usando markdown."""
             },
             {
                 "role": "user",
@@ -52,4 +58,7 @@ def responder_rag(pergunta: str, k: int = 10, alpha: float = 0.6) -> tuple:
         ]
     )
 
-    return resp.choices[0].message.content, docs
+    resposta = resp.choices[0].message.content
+    print(f"[GENERATOR] Saída: {len(resposta)} caracteres gerados")
+
+    return resposta, docs

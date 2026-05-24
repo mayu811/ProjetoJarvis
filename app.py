@@ -1,3 +1,5 @@
+
+# ----------------------- IMPORTAÇÕES ---------------------------
 from flask import Flask, render_template, request, jsonify
 from pathlib import Path
 import os
@@ -11,10 +13,15 @@ from src.backend.rag.converter import converter_para_markdown
 from src.backend.rag.chunker import chunking_paragrafo
 from src.backend.rag.indexer import indexar
 from src.backend.rag.client import processar_mensagem
+import src.backend.rag.indexer as indexer  # importa o módulo para acessar valores atuais
+from src.backend.tools.functions import precarregar_documentos
 
-from src.backend.rag.indexer import indice_faiss, indice_bm25, chunks_globais
-
+#inicialização do banco:
 inicializar_banco()
+
+#precarrega os documentos da pasta dataset para que já estejam disponíveis para consulta assim que o app iniciar
+# se não tiver nenhum arquivo carregado no diretório, a função ignorará esse fato
+precarregar_documentos('dataset')
 
 app = Flask(__name__,
             template_folder='src/templates',
@@ -53,11 +60,6 @@ def upload():
     markdown = converter_para_markdown(caminho)
     chunks = chunking_paragrafo(markdown, source=arquivo.filename)
     indexar(chunks)
-
-    # debug: imprime o número de chunks e o estado dos índices
-    print(f"Após upload — chunks: {len(chunks_globais)}, faiss: {indice_faiss}, bm25: {indice_bm25}")
-    
-    #=============
 
     return jsonify({
         'mensagem': f'{arquivo.filename} indexado com sucesso!',

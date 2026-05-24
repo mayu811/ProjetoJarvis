@@ -1,4 +1,12 @@
+'''
+    Módulo de indexação de chunks de texto para o processo de RAG.
+    Utiliza BM25 para indexação lexical e FAISS com SentenceTransformer para indexação semântica. 
+    Os chunks são armazenados em uma lista global e os índices são reconstruídos a cada nova indexação.
+    O processo de indexação é detalhado no docstring da função indexar, que explica passo a passo 
+    como os textos são processados, tokenizados, agrupados em chunks e indexados.
+'''
 
+# ----------------------- IMPORTAÇÕES -----------------------
 # indexação hibrida: FAISS + BM25
 import re
 import faiss
