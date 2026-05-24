@@ -10,30 +10,6 @@ def normalizar(v):
         return np.zeros_like(v)
     return (v - v.min()) / delta
 
-'''
-def recuperar_hibrido(pergunta: str, k: int = 3, alpha: float = 0.6) -> list:
-    # busca semântica via FAISS — não recalcula embeddings
-    q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")
-    scores_dense, indices_faiss = indexer.indice_faiss.search(q, len(indexer.chunks_globais))
-
-    sd = normalizar(scores_dense[0])
-
-    # busca lexical via BM25
-    sb = normalizar(indexer.indice_bm25.get_scores(indexer.tokenizar(pergunta)))
-
-    score_final = alpha * sd + (1.0 - alpha) * sb
-    idx = np.argsort(score_final)[::-1][:k]
-
-    return [
-        {
-            "id": indexer.chunks_globais[i]["id"],
-            "texto": indexer.chunks_globais[i]["texto"],
-            "source": indexer.chunks_globais[i].get("source", "desconhecido"),
-            "score": float(score_final[i])
-        }
-        for i in idx
-    ]'''
-
 
 def recuperar_hibrido(pergunta: str, k: int = 10, alpha: float = 0.6, max_por_source: int = 3) -> list:
     q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")

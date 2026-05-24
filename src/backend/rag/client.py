@@ -13,8 +13,10 @@ from openai import OpenAI
 
 
 #importação das funções que compõem o tool calling
-from src.backend.db.queries import (
-    adicionar_tarefa, #adiciona uma tarefa à lista de tarefas pendentes
+from src.backend.tools.functions import (
+
+    adicionar_tarefa,
+    importar_agenda_json, #adiciona uma tarefa à lista de tarefas pendentes
     listar_tarefas, #lista as tarefas pendentes -> com a coluna concluida = 0
     listar_tarefas_concluidas, #lista as tarefas concluídas -> com a coluna concluida = 1
     concluir_tarefa, # seta uma tarefa para concluida (concluida = 1)
@@ -22,7 +24,8 @@ from src.backend.db.queries import (
     planejar_estudos, #adicionado um novo agente com contexto injetado
     remover_compromisso, #remove um compromisso da agenda do usuário
     consultar_agenda, #consulta os compromissos agendados para uma data específica ou para o futuro
-    buscar_material_rag #busca informações nos documentos enviados, para responder perguntas do usuário
+    buscar_material_rag, #busca informações nos documentos enviados, para responder perguntas do usuário
+    planejar_estudos #planeja estudos com base nas tarefas, compromissos e materiais disponíveis
 )
 
 
@@ -41,8 +44,8 @@ mapa_funcoes = {
     "buscar_material_rag": buscar_material_rag,
     "adicionar_compromisso":  adicionar_compromisso,
     "remover_compromisso": remover_compromisso,
-    "planejar_estudos": planejar_estudos
-    #"importar_agenda_pdf": importar_agenda_pdf # função para extrair compromissos de um PDF de agenda, ainda não implementada
+    "planejar_estudos": planejar_estudos,
+    "importar_agenda_json": importar_agenda_json
     # se tiver mais funções, adicionar aqui
 }
 
@@ -80,6 +83,7 @@ def processar_mensagem(mensagem: str) -> str:
         - Ao confirmar uma ação, seja breve: "Tarefa concluída!" em vez de parágrafos explicativos.
         - Use markdown para formatar listas e destaques.
         - Sempre responda em português, mesmo que a pergunta seja em outro idioma.
+        - Se o usuário pedir para importar um arquivo JSON para a agenda, use importar_agenda_json passando o nome do arquivo.
         - Se o usuário fizer uma pergunta que não se encaixe nas funções disponíveis, responda diretamente com uma resposta amigável, sem JSON, e tente ajudar da melhor forma possível.
         - Se o usuário pedir algo que envolva mais de uma função, responda que só pode processar uma requisição por vez e peça para ele escolher uma ação específica.
         - Se o usuário pedir para concluir uma tarefa sem especificar o título, tente inferir qual tarefa ele se refere com base no contexto da conversa. Se não conseguir inferir, peça para ele especificar o título da tarefa a concluir.
