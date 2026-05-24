@@ -29,7 +29,10 @@ def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int 
     if chunk_atual.strip():
         chunks.append(chunk_atual.strip())
 
+    # formata os chunks como dicionários
+    #onde o id é "chunk_0000", "chunk_0001", etc., o texto é o conteúdo do chunk e a source é a fonte do documento para melhorar a rastreabilidade
     return [
+        
         {
             "id": f"chunk_{i:04d}",
             "texto": texto,

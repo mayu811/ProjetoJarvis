@@ -11,7 +11,7 @@ def normalizar(v):
     return (v - v.min()) / delta
 
 
-def recuperar_hibrido(pergunta: str, k: int = 10, alpha: float = 0.6, max_por_source: int = 3) -> list:
+def recuperar_hibrido(pergunta: str, k: int = 15, alpha: float = 0.6, max_por_source: int = 3) -> list:
     q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")
     scores_dense, indices_faiss = indexer.indice_faiss.search(q, len(indexer.chunks_globais))
 

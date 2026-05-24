@@ -12,6 +12,8 @@ from src.backend.rag.chunker import chunking_paragrafo
 from src.backend.rag.indexer import indexar
 from src.backend.rag.client import processar_mensagem
 
+from src.backend.rag.indexer import indice_faiss, indice_bm25, chunks_globais
+
 inicializar_banco()
 
 app = Flask(__name__,
@@ -52,8 +54,7 @@ def upload():
     chunks = chunking_paragrafo(markdown, source=arquivo.filename)
     indexar(chunks)
 
-    # debug
-    from src.backend.rag.indexer import indice_faiss, indice_bm25, chunks_globais
+    # debug: imprime o número de chunks e o estado dos índices
     print(f"Após upload — chunks: {len(chunks_globais)}, faiss: {indice_faiss}, bm25: {indice_bm25}")
     
     #=============

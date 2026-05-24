@@ -1,5 +1,5 @@
-As funções deste diretório foram baseadas no código disponibilizado 
-(com uso autorizado pelo professor) na atividade de RAG do AVA.
+As funções deste diretório foram baseadas nos códigos disponibilizados
+(com uso autorizado pelo professor) na atividade de RAG que estão no AVA.
 
 
 Roteiro da função RAG proposta:

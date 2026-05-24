@@ -1,13 +1,7 @@
 #geração final de resposta usando LLM + contexto relevante
-
-import json
 from src.backend.rag.retriever import recuperar_hibrido
-from openai import OpenAI
+from src.backend.rag.client import client
 
-client = OpenAI(base_url='https://llm.liaufms.org/v1/gemma-3-12b-it', api_key='Cxt2ftLF7d3mHS2JdiFqB-eSDAQeZvFATPXPs02lV9A')
-
-
-#print(resp.choices[0].message.content)
 
 # função para construir o prompt a partir da pergunta e dos documentos recuperados
 def construir_prompt(pergunta, docs):

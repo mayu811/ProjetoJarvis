@@ -2,33 +2,31 @@
     Aqui estão as funções queries que interagem diretamente com o banco de dados SQLite, 
     usando a função get_connection() definida em database.py para obter uma conexão com o banco.
 
-    Essas funções são chamadas pelo backend para realizar as operações solicitadas pelo usuário, como:
-        adicionar tarefas,
-        concluir tarefas,
-        listar tarefas, 
-        adicionar compromissos,
-        remover compromissos,
-        consultar a agenda,
-        buscar material_RAG**
-
-    Obs.:**  
-    A função buscar_material_rag é uma função especial que não interage com o banco de dados, 
-    mas sim com o módulo de RAG para recuperar informações relevantes dos documentos acadêmicos. 
-    Ela foi colocada aqui para manter todas as funções de backend em um único arquivo, 
-    mas poderia ser movida para outro módulo se desejado, isto juntamente com a importação da suas dependências.
-
 '''
+
+# ------------ IMPORTAÇÕES --------------#
 
 # funções para interagir com o banco de dados (SQLite)
 from src.backend.db.database import get_connection
-
 
 #dependencias para interagir com a função que utiliza RAG
 from src.backend.rag.retriever import recuperar_hibrido
 from src.backend.rag.indexer import indice_bm25
 from src.backend.rag.generator import responder_rag
 
-# ---------------------- TAREFAS ----------------------
+#importação do módulo de indexação para verificar se os índices estão prontos antes de tentar recuperar material
+import src.backend.rag.indexer as indexer  # importa o módulo, não a variável
+
+#importação do módulo de geração para usar a função de resposta RAG dentro da função buscar_material_rag
+from src.backend.rag.generator import responder_rag
+
+#importação do cliente para usar a função de resposta RAG dentro da função planejar_estudos
+from src.backend.rag.indexer import indice_faiss
+from src.backend.rag.generator import responder_rag, client
+import json
+
+
+# ---------------------- TAREFAS ---------------------- #
 
 def adicionar_tarefa(titulo: str, prazo: str = None, prioridade: str = "baixa") -> dict:
 
@@ -95,7 +93,9 @@ def concluir_tarefa(titulo: str) -> dict:
         return {"ok": False, "mensagem": f"Tarefa '{titulo}' não encontrada."}
     return {"ok": True, "mensagem": f"Tarefa '{titulo}' concluída."}
 
-# ---------------------- COMPROMISSOS ----------------------
+
+
+# ---------------------- COMPROMISSOS (AGENDA) ---------------------- #
 
 def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, local: str = None) -> dict:
 
@@ -146,32 +146,14 @@ def consultar_agenda(data: str = None) -> dict:
         return {"ok": True, "mensagem": "Nenhum compromisso na agenda."}
     return {"ok": True, "compromissos": compromissos}
 
-'''def buscar_material_rag(pergunta: str) -> dict:    
 
-    # verifica se há documentos indexados
-    # verifica ambos
-    from src.backend.rag.indexer import indice_bm25, indice_faiss #novo
-
-    if indice_bm25 is None or indice_faiss is None: #novo
-        return {"ok": False, "mensagem": "Nenhum documento foi enviado ainda. Envie um arquivo primeiro."} #novo
-    
-    resposta, docs = responder_rag(pergunta)
-
-    if not docs:
-        return {"ok": False, "mensagem": "Nenhum material encontrado nos documentos."}
-
-    return {"ok": True, "contexto": resposta}
-'''
-
-# ---------------------- FUNCOES RAGS ----------------------
+# ---------------------- FUNÇÕES RAGS ----------------------
 
 def buscar_material_rag(pergunta: str) -> dict:
-    import src.backend.rag.indexer as indexer  # importa o módulo, não a variável
 
     if indexer.indice_faiss is None or indexer.indice_bm25 is None:
         return {"ok": False, "mensagem": "Nenhum documento foi enviado ainda. Envie um arquivo primeiro."}
 
-    from src.backend.rag.generator import responder_rag
     resposta, docs = responder_rag(pergunta, k=10)
 
     print(f"\n=== BUSCAR_MATERIAL_RAG ===")
@@ -186,9 +168,6 @@ def buscar_material_rag(pergunta: str) -> dict:
 
 
 def planejar_estudos(pergunta: str) -> dict:
-    from src.backend.rag.indexer import indice_faiss
-    from src.backend.rag.generator import responder_rag, client
-    import json
 
     tarefas = listar_tarefas()
     agenda = consultar_agenda()
@@ -201,6 +180,7 @@ def planejar_estudos(pergunta: str) -> dict:
 
     resp = client.chat.completions.create(
         model='google/gemma-3-12b-it',
+        #monta o prompt incluindo a pergunta, as tarefas pendentes, a agenda e o contexto RAG (se disponível)
         messages=[
             {
                 "role": "system",
