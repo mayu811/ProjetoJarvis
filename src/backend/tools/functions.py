@@ -180,26 +180,3 @@ def planejar_estudos(pergunta: str) -> dict:
 
     return {"ok": True, "contexto": resp.choices[0].message.content}
 
-
-# ---------------------- PRE CARREGAMENTO DE DATASET ---------------------- #
-def precarregar_documentos(pasta: str = 'dataset') -> None:
-
-    pasta_path = Path(pasta)
-    if not pasta_path.exists():
-        print(f"[PRELOAD] Pasta '{pasta}' não encontrada, ignorando.")
-        return
-
-    extensoes = {'.pdf', '.txt', '.docx'}
-    arquivos = [f for f in pasta_path.iterdir() if f.suffix.lower() in extensoes]
-
-    if not arquivos:
-        print(f"[PRELOAD] Nenhum arquivo compatível em '{pasta}'.")
-        return
-
-    for arquivo in arquivos:
-        print(f"[PRELOAD] Indexando {arquivo.name}...")
-        markdown = converter_para_markdown(str(arquivo))
-        chunks = chunking_paragrafo(markdown, source=arquivo.name)
-        indexar(chunks)
-
-    print(f"[PRELOAD] {len(arquivos)} arquivo(s) indexado(s) de '{pasta}'.")

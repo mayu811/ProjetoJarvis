@@ -19,10 +19,6 @@ from src.backend.tools.functions import precarregar_documentos
 #inicialização do banco:
 inicializar_banco()
 
-#precarrega os documentos da pasta dataset para que já estejam disponíveis para consulta assim que o app iniciar
-# se não tiver nenhum arquivo carregado no diretório, a função ignorará esse fato
-precarregar_documentos('dataset')
-
 app = Flask(__name__,
             template_folder='src/templates',
             static_folder='src/static')

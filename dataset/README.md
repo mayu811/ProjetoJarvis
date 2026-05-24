@@ -118,7 +118,7 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 
 ---
 
-## 10. `material-futuro`
+## 10. `On The Role of Pretrained Language Models in General-Purpose Text Embeddings`
 
 - **ORIGEM:** a definir
 - **TEMA:** a definir
