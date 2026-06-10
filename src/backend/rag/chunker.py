@@ -22,7 +22,7 @@ def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int 
         Criação de IDs e metadados
                 ↓
         Lista final de chunks
-    ================================================================
+        ================================================================
     """
     print(f"\n[CHUNKER] Entrada: source='{source}' | min_chars={min_chars} | chunk_size={chunk_size} | overlap={overlap}")
 
@@ -30,11 +30,16 @@ def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int 
     paragrafos = [p.strip() for p in texto.split("\n\n")]
     paragrafos = [p for p in paragrafos if len(p) >= min_chars]
 
+    if not paragrafos:
+        print(f"[CHUNKER] Aviso: nenhum parágrafo válido em '{source}'")
+        return []
 
-    # agrupamento dos parágrafos em chunks respeitando o limite de tamanho e aplicando overlap
+
+    # agrupamento em chunks
     chunks = []
     chunk_atual = ""
-
+    chunk_counter = 0
+    '''
     for paragrafo in paragrafos:
         if len(chunk_atual) + len(paragrafo) > chunk_size and chunk_atual:
             chunks.append(chunk_atual.strip())
@@ -42,7 +47,24 @@ def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int 
             chunk_atual = chunk_atual[-overlap:] + "\n\n" + paragrafo
         else:
             chunk_atual += "\n\n" + paragrafo if chunk_atual else paragrafo
-
+        '''
+    for paragrafo in paragrafos:
+        # Se adicionar este parágrafo ultrapassar o limite E já temos conteúdo
+        if len(chunk_atual) + len(paragrafo) > chunk_size and chunk_atual:
+            # Salva chunk atual
+            chunks.append(chunk_atual.strip())
+            chunk_counter += 1
+            # Inicia novo chunk com overlap
+            overlap_text = chunk_atual[-overlap:] if len(chunk_atual) > overlap else chunk_atual
+            chunk_atual = overlap_text + "\n\n" + paragrafo
+        else:
+            # Adiciona parágrafo ao chunk atual
+            if chunk_atual:
+                chunk_atual += "\n\n" + paragrafo
+            else:
+                chunk_atual = paragrafo
+        
+    
     # se sobrou algum texto no chunk_atual após o loop, adiciona como último chunk
     if chunk_atual.strip():
         chunks.append(chunk_atual.strip())
@@ -50,13 +72,18 @@ def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int 
     # criação da estrutura final de chunks com IDs e metadados
     resultado = [
         {
-            "id": f"chunk_{i:04d}",
-            "texto": texto,
+            "id": f"{source.replace(' ', '_')}_chunk_{i:04d}",
+            "texto": chunk,
             "source": source
         }
-        for i, texto in enumerate(chunks)
+        for i, chunk in enumerate(chunks)
     ]
 
-    print(f"[CHUNKER] Saída: {len(resultado)} chunks gerados de '{source}'")
+    print(f"[CHUNKER] Gerados {len(resultado)}")
+    # prints
+    if len(resultado) <= 5:
+        for r in resultado:
+            print(f"  - {r['id']} | {len(r['texto'][:80])} chars")
+
 
     return resultado
