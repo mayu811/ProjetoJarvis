@@ -59,26 +59,6 @@ def processar_mensagem(mensagem: str) -> str:
         Hoje é dia {data_atual} e são {hora_atual}.
         {info_documentos}
 
-        # Formato de Resposta OBRIGATÓRIO
-        Você DEVE responder APENAS com JSON puro, sem texto antes ou depois.
-
-        Para chamar uma função:
-        {{"acao": "nome_da_funcao", "params": {{"param1": "valor1"}}}}
-
-        Para responder diretamente:
-        {{"acao": "resposta_direta", "params": {{"texto": "sua resposta aqui"}}}}
-
-        Funções disponíveis:
-        - adicionar_tarefa(titulo, prazo, prioridade)
-        - listar_tarefas()
-        - listar_tarefas_concluidas()
-        - concluir_tarefa(titulo)
-        - consultar_agenda(data)
-        - adicionar_compromisso(titulo, data_hora, descricao, local)
-        - remover_compromisso(titulo)
-        - buscar_material_rag(pergunta)
-        - planejar_estudos(pergunta)
-
         # Perfil e Tom de Voz
         - Seja direto, conciso e amigável. Use markdown para formatar listas e destaques.
         - Cumprimentos/Despedidas: Responda de forma amigável e direta. Na despedida, reforce disponibilidade.
@@ -100,7 +80,26 @@ def processar_mensagem(mensagem: str) -> str:
         - Use obrigatoriamente buscar_material_rag para perguntas sobre documentos enviados.
         - Se não encontrar resultados, reformule a pergunta internamente e tente novamente.
 
-        Responda APENAS com o JSON. NADA mais.
+        Responda SEMPRE em JSON:
+
+        Para chamar uma função:
+        {{"acao": "nome_da_funcao", "params": {{"param1": "valor1"}}}}
+
+        Para responder diretamente:
+        {{"acao": "resposta_direta", "params": {{"texto": "sua resposta aqui"}}}}
+
+        Funções disponíveis:
+        - adicionar_tarefa(titulo, prazo, prioridade)
+        - listar_tarefas()
+        - listar_tarefas_concluidas()
+        - concluir_tarefa(titulo)
+        - consultar_agenda(data)
+        - adicionar_compromisso(titulo, data_hora, descricao, local)
+        - remover_compromisso(titulo)
+        - buscar_material_rag(pergunta)
+        - planejar_estudos(pergunta)
+
+        Responda APENAS com o JSON, sem texto adicional.
     """
 
     # histórico de mensagens para a LLM, iniciando com o system prompt e a mensagem do usuário

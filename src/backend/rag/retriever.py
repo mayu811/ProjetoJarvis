@@ -19,11 +19,10 @@ def normalizar(v):
     return (v - v.min()) / delta
 
 # recuperação híbrida combinando BM25 e semântico
-def recuperar_hibrido(
-        pergunta: str, k: int = 5, alpha: float = 0.5, max_por_source: int = 2) -> list:
+def recuperar_hibrido(pergunta: str, k: int = 15, alpha: float = 0.6, max_por_source: int = 3) -> list:
     """
     Combina BM25 e semântico.
-    alpha = peso do semântico (0 = só BM25, 1 = só semântico, 0.5 = padrão)
+    alpha = peso do semântico (0 = só BM25, 1 = só semântico, 0.6 = padrão)
     max_por_source = limita quantos chunks podem vir da mesma fonte para garantir diversidade
      - pergunta: string com a pergunta do usuário
      - k: número total de chunks a recuperar
@@ -35,42 +34,18 @@ def recuperar_hibrido(
     print(f"\n[RETRIEVER] Entrada: pergunta='{pergunta}' | k={k} | alpha={alpha} | max_por_source={max_por_source}")
     print(f"[RETRIEVER] Ferramenta: FAISS + BM25Okapi (híbrido)")
 
-    total_chunks = len(indexer.chunks_globais)
-
-    if total_chunks == 0:
-        print("[RETRIEVER] Nenhum chunk indexado")
-        return []
-    
-    print(f"\n[RETRIEVER] Buscando em {total_chunks} chunks | k={k} | alpha={alpha}")
-
     q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")
-    
-    #k_search = min(50, len(indexer.chunks_globais))  # busca um número maior para depois filtrar
-    k_faiss = min(50, total_chunks)  # busca um número maior para depois filtrar
-    scores_dense, indices = indexer.indice_faiss.search(q, k_faiss)
+    scores_dense, _ = indexer.indice_faiss.search(q, len(indexer.chunks_globais))
 
-    #Normaliza scores
     sd = normalizar(scores_dense[0])
+    sb = normalizar(indexer.indice_bm25.get_scores(indexer.tokenizar(pergunta)))
 
-    #BM24 scores
-    tokens_pergunta = indexer.tokenizar(pergunta)
-
-    #sb = normalizar(indexer.indice_bm25.get_scores(indexer.tokenizar(pergunta)))
-    scores_bm25_full = indexer.indice_bm25.get_scores(tokens_pergunta)
-    sb = normalizar(scores_bm25_full)
-
-    #combina scores (hibrido)
-    #score_final = alpha * sd + (1.0 - alpha) * sb
-    score_final = np.zero(total_chunks)
-    for pos, idx in enumerate(indices[0]):
-        score_final[idx] = alpha * sd[pos] + (1 - alpha) * sb[idx]
-    #idx = np.argsort(score_final)[::-1]
-
-    indices_ordenados = np.argsort(score_final)[::-1]
+    score_final = alpha * sd + (1.0 - alpha) * sb
+    idx = np.argsort(score_final)[::-1]
 
     docs_finais = []
     sources_count = {}
-    '''
+
     for i in idx:
         source = indexer.chunks_globais[i].get("source", "desconhecido")
         if sources_count.get(source, 0) >= max_por_source:
@@ -84,30 +59,8 @@ def recuperar_hibrido(
         sources_count[source] = sources_count.get(source, 0) + 1
         if len(docs_finais) >= k:
             break
-    '''
-
-    for idx in indices_ordenados:
-        if len(docs_finais) >= k:
-            break
-
-        chunk = indexer.chunks_globais[idx]
-        source = chunk.get("source", "desconhecido")
-
-    if sources_count.get(source, 0) >= max_por_source:
-        continue
-
-    docs_finais.append({
-        "id": chunk["id"],
-        "texto": chunk["texto"],
-        "source": source,
-        "score": float(score_final[idx])
-    })
-
-    sources_count[source] = sources_count.get(source, 0) + 1
 
     #
-    print(f"[RETRIEVER] {len(docs_finais)} chunks")
-    for d in docs_finais:
-        print(f" - {d['source']} (score: {d['score']:.3f}): {d['texto'][:60]}")
+    print(f"[RETRIEVER] {len(docs_finais)} chunks | sources: { {s: c for s, c in sources_count.items()} }")
     
     return docs_finais
