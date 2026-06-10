@@ -34,9 +34,24 @@ def tokenizar(texto: str) -> list[str]:
 def indexar(novos_chunks: list[dict]):
     global chunks_globais, indice_bm25, indice_faiss, embeddings_globais
 
+    novos_chunks_validos = []
     print(f"\n[INDEXER] Entrada: {len(novos_chunks)} novos chunks")
+    '''
     for c in novos_chunks:
         print(f"  [{c['id']}] [{c['source']}] {c['texto'][:60]}")
+    '''
+
+    #alteracao aq
+    for c in novos_chunks:
+        if c.get("texto") and len(c["texto"].strip()) > 10:
+            novos_chunks_validos.append(c)
+        else:
+            print(f"[INDEXER] Aviso: chunk inválido ignorado: {c.get('id', 'unknown')}")
+
+    if not novos_chunks_validos:
+        print("[INDEXER] Nenhum chunk válido para indexar")
+        return
+    print(f"\n[INDEXER] Indexando {len(novos_chunks_validos)} novos chunks")
 
     chunks_globais.extend(novos_chunks)
 

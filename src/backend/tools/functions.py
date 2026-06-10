@@ -149,34 +149,40 @@ def planejar_estudos(pergunta: str) -> dict:
         resposta_rag, docs = responder_rag(pergunta, k=10)
         if docs:
             contexto_rag = resposta_rag
+    try:
+        resp = client.chat.completions.create(
+            model='google/gemma-3-12b-it',
+            # monta o prompt incluindo a pergunta, as tarefas pendentes, a agenda e o contexto RAG (se disponível)
+            messages=[
+                {
+                    "role": "system",
+                    "content": """Você é um assistente acadêmico especializado em planejamento de estudos.
+                    Com base nas tarefas pendentes, agenda e materiais fornecidos, monte um plano de estudos claro e objetivo.
+                    Use markdown para formatar. Seja específico e prático."""
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+                    Solicitação: {pergunta}
 
-    resp = client.chat.completions.create(
-        model='google/gemma-3-12b-it',
-        # monta o prompt incluindo a pergunta, as tarefas pendentes, a agenda e o contexto RAG (se disponível)
-        messages=[
-            {
-                "role": "system",
-                "content": """Você é um assistente acadêmico especializado em planejamento de estudos.
-                Com base nas tarefas pendentes, agenda e materiais fornecidos, monte um plano de estudos claro e objetivo.
-                Use markdown para formatar. Seja específico e prático."""
-            },
-            {
-                "role": "user",
-                "content": f"""
-                Solicitação: {pergunta}
+                    Tarefas pendentes:
+                    {json.dumps(tarefas, ensure_ascii=False)}
 
-                Tarefas pendentes:
-                {json.dumps(tarefas, ensure_ascii=False)}
+                    Agenda:
+                    {json.dumps(agenda, ensure_ascii=False)}
 
-                Agenda:
-                {json.dumps(agenda, ensure_ascii=False)}
+                    Conteúdo dos documentos relevantes:
+                    {contexto_rag or "Nenhum documento enviado."}
 
-                Conteúdo dos documentos relevantes:
-                {contexto_rag or "Nenhum documento enviado."}
-                """
-            }
-        ]
-    )
+                    Monte um plano de estudos claro, com etapas específicas e prioridades
+                    """
+                }
+            ],
+            temperature=0.5,
+            max_tokens=1500
+        )
 
-    return {"ok": True, "contexto": resp.choices[0].message.content}
-
+        return {"ok": True, "contexto": resp.choices[0].message.content}
+    except Exception as e:
+        print(f"[PLANEJAR] ERRO: {e}")
+        return {"ok": False, "mensagem": f"Erro no planejamento: {str(e)}"}

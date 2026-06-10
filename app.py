@@ -80,6 +80,26 @@ def chat():
     resposta = processar_mensagem(mensagem)    
     return jsonify({'resposta': resposta})
 
+@app.route('/debug/chunks', methods=['GET'])
+def debug_chunks():
+    """Rota para debug - ver chunks indexados"""
+    chunks_info = []
+    for c in indexer.chunks_globais[:10]:  # só os 10 primeiros
+        chunks_info.append({
+            'id': c.get('id'),
+            'source': c.get('source'),
+            'size': len(c.get('texto', '')),
+            'preview': c.get('texto', '')[:150]
+        })
+    
+    return jsonify({
+        'total_chunks': len(indexer.chunks_globais),
+        'faiss_ready': indexer.indice_faiss is not None,
+        'bm25_ready': indexer.indice_bm25 is not None,
+        'chunks': chunks_info
+    })
+
+
 # da run no app Flask em modo debug para facilitar o desenvolvimento
 if __name__ == '__main__':
     app.run(debug=True)
