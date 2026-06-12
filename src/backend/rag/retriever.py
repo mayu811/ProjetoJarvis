@@ -25,6 +25,7 @@ def recuperar_hibrido(
     Combina BM25 e semântico.
     alpha = peso do semântico (0 = só BM25, 1 = só semântico, 0.5 = padrão)
     max_por_source = limita quantos chunks podem vir da mesma fonte para garantir diversidade
+    
      - pergunta: string com a pergunta do usuário
      - k: número total de chunks a recuperar
      - alpha: peso do semântico na combinação dos scores
@@ -41,71 +42,65 @@ def recuperar_hibrido(
         print("[RETRIEVER] Nenhum chunk indexado")
         return []
     
+    
+    if total_chunks > 200:
+        k_faiss = min(100, total_chunks)  # Busca mais chunks
+        k_final = min(10, total_chunks)   # Retorna mais resultados
+    else:
+        k_faiss = min(50, total_chunks)
+        k_final = k
+    
     print(f"\n[RETRIEVER] Buscando em {total_chunks} chunks | k={k} | alpha={alpha}")
-
+ 
+    #Gera Embedding (para as perguntas) --------------------------
     q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")
     
+    # Busca FAISS --------------------------
     #k_search = min(50, len(indexer.chunks_globais))  # busca um número maior para depois filtrar
     k_faiss = min(50, total_chunks)  # busca um número maior para depois filtrar
     scores_dense, indices = indexer.indice_faiss.search(q, k_faiss)
 
-    #Normaliza scores
+    # Normaliza scores --------------------------
     sd = normalizar(scores_dense[0])
 
-    #BM24 scores
+    #BM24 scores --------------------------
     tokens_pergunta = indexer.tokenizar(pergunta)
-
-    #sb = normalizar(indexer.indice_bm25.get_scores(indexer.tokenizar(pergunta)))
     scores_bm25_full = indexer.indice_bm25.get_scores(tokens_pergunta)
     sb = normalizar(scores_bm25_full)
 
-    #combina scores (hibrido)
-    #score_final = alpha * sd + (1.0 - alpha) * sb
-    score_final = np.zero(total_chunks)
+    #Combina scores (hibrido)  --------------------------
+    score_final = np.zeros(total_chunks)
     for pos, idx in enumerate(indices[0]):
         score_final[idx] = alpha * sd[pos] + (1 - alpha) * sb[idx]
-    #idx = np.argsort(score_final)[::-1]
+
 
     indices_ordenados = np.argsort(score_final)[::-1]
 
+
+    #Contadores para prints --------------------------
     docs_finais = []
     sources_count = {}
-    '''
-    for i in idx:
-        source = indexer.chunks_globais[i].get("source", "desconhecido")
-        if sources_count.get(source, 0) >= max_por_source:
-            continue
-        docs_finais.append({
-            "id": indexer.chunks_globais[i]["id"],
-            "texto": indexer.chunks_globais[i]["texto"],
-            "source": source,
-            "score": float(score_final[i])
-        })
-        sources_count[source] = sources_count.get(source, 0) + 1
-        if len(docs_finais) >= k:
-            break
-    '''
-
+    
+    #  --------------------------
     for idx in indices_ordenados:
-        if len(docs_finais) >= k:
+        if len(docs_finais) >= k_final:
             break
 
         chunk = indexer.chunks_globais[idx]
         source = chunk.get("source", "desconhecido")
 
-    if sources_count.get(source, 0) >= max_por_source:
-        continue
+        if sources_count.get(source, 0) >= max_por_source:
+            continue
 
-    docs_finais.append({
-        "id": chunk["id"],
-        "texto": chunk["texto"],
-        "source": source,
-        "score": float(score_final[idx])
-    })
+        docs_finais.append({
+            "id": chunk["id"],
+            "texto": chunk["texto"],
+            "source": source,
+            "score": float(score_final[idx])
+        })
 
-    sources_count[source] = sources_count.get(source, 0) + 1
+        sources_count[source] = sources_count.get(source, 0) + 1
 
-    #
     print(f"[RETRIEVER] {len(docs_finais)} chunks")
     for d in docs_finais:
         print(f" - {d['source']} (score: {d['score']:.3f}): {d['texto'][:60]}")

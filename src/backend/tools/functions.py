@@ -5,19 +5,19 @@
 ''' 
 
 # ------------ IMPORTAÇÕES --------------#
-
+import json
+from src.backend.rag.connection import client, MODEL_NAME
 from src.backend.db.database import get_connection
 import src.backend.rag.indexer as indexer
-from src.backend.rag.generator import responder_rag
-from src.backend.rag.connection import client
-from src.backend.rag.converter import converter_para_markdown
-from src.backend.rag.chunker import chunking_paragrafo
-from src.backend.rag.indexer import indexar
-import json
-from pathlib import Path
+from src.backend.rag.generator import (
+    responder_rag, 
+    planejar_estudos_com_rag, 
+    avaliar_resposta_com_rag,
+    recomendar_revisao_com_rag, 
+    gerar_exercicios_com_rag
+)
 
-
-# ---------------------- TAREFAS ---------------------- #
+# ---------------------- FUNCOES DE TAREFAS ---------------------- #
 
 def adicionar_tarefa(titulo: str, prazo: str = None, prioridade: str = "baixa") -> dict:
     conn = get_connection()
@@ -74,7 +74,7 @@ def concluir_tarefa(titulo: str) -> dict:
     return {"ok": True, "mensagem": f"Tarefa '{titulo}' concluída."}
 
 
-# ---------------------- COMPROMISSOS (AGENDA) ---------------------- #
+# ---------------------- FUNCOES DE COMPROMISSOS (AGENDA) ---------------------- #
 
 def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, local: str = None) -> dict:
     conn = get_connection()
@@ -122,7 +122,7 @@ def consultar_agenda(data: str = None) -> dict:
     return {"ok": True, "compromissos": compromissos}
 
 
-# ---------------------- FUNÇÕES RAG ---------------------- #
+# ---------------------- FUNÇÕES QUE USAM RAG ---------------------- #
 
 def buscar_material_rag(pergunta: str) -> dict:
     if indexer.indice_faiss is None or indexer.indice_bm25 is None:
@@ -138,51 +138,72 @@ def buscar_material_rag(pergunta: str) -> dict:
 
 
 def planejar_estudos(pergunta: str) -> dict:
+    """Planeja estudos combinando tarefas, agenda e documentos"""
     print(f"[PLANEJAR] Combinando tarefas, agenda e documentos...")
 
     tarefas = listar_tarefas()
     agenda = consultar_agenda()
 
-    contexto_rag = None
-    # usa indexer.indice_faiss pelo módulo para pegar o valor atual (não congela no import)
-    if indexer.indice_faiss is not None:
-        resposta_rag, docs = responder_rag(pergunta, k=10)
-        if docs:
-            contexto_rag = resposta_rag
     try:
-        resp = client.chat.completions.create(
-            model='google/gemma-3-12b-it',
-            # monta o prompt incluindo a pergunta, as tarefas pendentes, a agenda e o contexto RAG (se disponível)
-            messages=[
-                {
-                    "role": "system",
-                    "content": """Você é um assistente acadêmico especializado em planejamento de estudos.
-                    Com base nas tarefas pendentes, agenda e materiais fornecidos, monte um plano de estudos claro e objetivo.
-                    Use markdown para formatar. Seja específico e prático."""
-                },
-                {
-                    "role": "user",
-                    "content": f"""
-                    Solicitação: {pergunta}
-
-                    Tarefas pendentes:
-                    {json.dumps(tarefas, ensure_ascii=False)}
-
-                    Agenda:
-                    {json.dumps(agenda, ensure_ascii=False)}
-
-                    Conteúdo dos documentos relevantes:
-                    {contexto_rag or "Nenhum documento enviado."}
-
-                    Monte um plano de estudos claro, com etapas específicas e prioridades
-                    """
-                }
-            ],
-            temperature=0.5,
-            max_tokens=1500
-        )
-
-        return {"ok": True, "contexto": resp.choices[0].message.content}
+        plano = planejar_estudos_com_rag(pergunta, tarefas, agenda)
+        return {"ok": True, "contexto": plano}
     except Exception as e:
         print(f"[PLANEJAR] ERRO: {e}")
         return {"ok": False, "mensagem": f"Erro no planejamento: {str(e)}"}
+
+
+def gerar_exercicios(tema: str, qtd: int = 5) -> dict:
+    """
+    Funcionalidade interativa de aprendizado.
+    Gera exercicios sobre um tema
+    
+    Args:
+        tema (str): _description_
+        num_questoes (int, optional): _description_. Defaults to 5.
+
+    Returns:
+        dict: _description_
+    """
+
+    print(f"[EXERCICIOS] Gerando exercícios sobre: {tema}")
+
+    try:
+        return gerar_exercicios_com_rag(tema, qtd)
+    except Exception as e:
+        print(f"[EXERCICIOS] ERRO: {e}")
+        return {"ok": False, "mensagem": f"Erro no geramento: {str(e)}"}
+
+
+def avaliar_resposta_exercicio(resposta_usuario: str) -> dict:
+    """
+    Avalia a resposta do usuario e avança para a próxima questão.
+
+    Args:
+        resposta_usuario (str): Resposta que ele deu para um dos exercicios gerados
+
+    Returns:
+        dict: 
+    """
+    
+    print(f"[AVALIACAO] Avaliando resposta...")
+
+    try:
+        return avaliar_resposta_com_rag(resposta_usuario)
+    except Exception as e:
+        print(f"[AVALIACAO] ERRO: {e}")
+        return {"ok": False, "mensagem": f"Erro na avaliacao: {str(e)}"}
+
+
+def recomendar_revisao(assunto_consultado: str) -> dict:
+    """
+    Recomenda tópicos relacionados para revisão com base na pergunta do usuário.
+    Funcionalidade passiva de aprendizado.
+    """
+        
+    print(f"[RECOMENDACAO] Gerando recomendações para: {assunto_consultado}")
+
+    try:
+        return recomendar_revisao_com_rag(assunto_consultado)
+    except Exception as e:
+        print(f"[RECOMENDACAO] ERRO: {e}")
+        return {"ok": False, "mensagem": ""}

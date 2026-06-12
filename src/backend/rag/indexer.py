@@ -15,14 +15,15 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 
 
-# carrega o modelo uma única vez ao importar o módulo
-modelo_embed = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-
 # variáveis globais
 chunks_globais = []
 indice_bm25 = None
 indice_faiss = None
 embeddings_globais = None
+
+# carrega o modelo uma única vez ao importar o módulo
+modelo_embed = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+
 
 # ── Índice BM25 (lexical) ─────────────────────────────────────────────────────
 
@@ -34,14 +35,12 @@ def tokenizar(texto: str) -> list[str]:
 def indexar(novos_chunks: list[dict]):
     global chunks_globais, indice_bm25, indice_faiss, embeddings_globais
 
-    novos_chunks_validos = []
+    
     print(f"\n[INDEXER] Entrada: {len(novos_chunks)} novos chunks")
-    '''
-    for c in novos_chunks:
-        print(f"  [{c['id']}] [{c['source']}] {c['texto'][:60]}")
-    '''
+    
+    # filtra chunks vazios
+    novos_chunks_validos = []
 
-    #alteracao aq
     for c in novos_chunks:
         if c.get("texto") and len(c["texto"].strip()) > 10:
             novos_chunks_validos.append(c)
@@ -53,7 +52,7 @@ def indexar(novos_chunks: list[dict]):
         return
     print(f"\n[INDEXER] Indexando {len(novos_chunks_validos)} novos chunks")
 
-    chunks_globais.extend(novos_chunks)
+    chunks_globais.extend(novos_chunks_validos)
 
     # BM25
     

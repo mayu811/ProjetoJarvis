@@ -31,11 +31,22 @@ body {
     overflow: hidden;
 }
 
+/*
+======================================
+- Estilos para o icone do JARVIS
+======================================
+*/
 .avatar{
     width: 40px;
     height: 40px;
     margin-right: 10px;
 }
+
+/*
+======================================
+- Estilos para a tela do chat
+======================================
+*/
 
 .chat-container {
     width: 100%;
@@ -80,6 +91,11 @@ body {
 }
 
 
+/*
+======================================
+- Estilos para o balão das mensagens (enviadas ou recebidas)
+======================================
+*/
 .message {
     max-width: 75%;
     padding: 10px 15px;
@@ -95,8 +111,6 @@ body {
     border: 1px solid #ddd;
 }
 
-
-
 .message.sent {
     color: #e3e3e3;
     background-color: var(--sent-message-color);
@@ -110,6 +124,92 @@ body {
     border: 1px solid #ddd;
 }
 
+/*
+======================================
+- Estilos para mensagens (textos) recebidas da llm em markdown
+======================================
+*/
+.received-content {
+    display: block;
+    line-height: 1.5;
+}
+
+.received-content h1,
+.received-content h2,
+.received-content h3 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+
+.received-content h1 { 
+    font-size: 1.3rem; 
+}
+
+.received-content h2 { 
+    font-size: 1.2rem; 
+}
+
+.received-content h3 { 
+    font-size: 1.1rem; 
+}
+
+.received-content p {
+    margin-bottom: 0.5rem;
+}
+
+.received-content ul,
+.received-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.received-content li {
+    margin-bottom: 0.2rem;
+}
+
+.received-content strong {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.received-content em {
+    font-style: italic;
+}
+
+.received-content hr {
+    margin: 0.5rem 0;
+    border: none;
+    border-top: 1px solid #e0e0e0;
+}
+
+.received-content code {
+    background: #f4f4f4;
+    padding: 0.2rem 0.3rem;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.received-content pre {
+    background: #f4f4f4;
+    padding: 0.8rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+}
+
+.received-content pre code {
+    background: none;
+    padding: 0;
+}
+
+/*
+======================================
+- Estilos para o visual do campo input
+======================================
+*/
 .chat-input-area {
     padding: 15px;
     background-color: var(--input-color);
@@ -145,7 +245,6 @@ body {
     height: 40px;
 }
 
-
 .input-wrapper {
     position: relative;
     flex: 1;
@@ -154,7 +253,7 @@ body {
 .input-wrapper input {
     width: 100%;
     padding: 12px 18px;
-    padding-right: 44px; /* abre espaço para o ícone não sobrepor o texto */
+    padding-right: 44px;
 }
 
 .clip-btn {

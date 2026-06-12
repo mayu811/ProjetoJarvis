@@ -8,9 +8,10 @@
 
 from datetime import datetime
 import json
-
+import re
 from src.backend.rag.indexer import chunks_globais
-from src.backend.rag.connection import client
+from src.backend.rag.generator import exercicios_ativos
+from src.backend.rag.connection import client, MODEL_NAME
 from src.backend.tools.functions import (
     adicionar_tarefa,       # adiciona tarefa ao banco
     listar_tarefas,         # lista tarefas pendentes (concluida = 0)
@@ -20,8 +21,15 @@ from src.backend.tools.functions import (
     remover_compromisso,    # remove compromisso da agenda
     consultar_agenda,       # consulta compromissos por data ou todos
     buscar_material_rag,    # busca informações nos documentos enviados
-    planejar_estudos        # planeja estudos combinando tarefas, agenda e documentos
+    planejar_estudos,        # planeja estudos combinando tarefas, agenda e documentos
+    gerar_exercicios,       # gera exercicios combinando documentos e a tema pedido pelo usuario
+    avaliar_resposta_exercicio,   # avalia o que foi respodido does exercicios
+    recomendar_revisao,     # recomenda revisoes com base no que foi perguntado
 )
+
+# -------------------- VARIAVEIS GLOBAIS --------------------
+# Estado para controle do modo exercício
+modo_exercicio_ativo = False
 
 # -------------------- MAPEAMENTO DE FUNÇÕES --------------------
 mapa_funcoes = {
@@ -34,15 +42,77 @@ mapa_funcoes = {
     "adicionar_compromisso":    adicionar_compromisso,
     "remover_compromisso":      remover_compromisso,
     "planejar_estudos":         planejar_estudos,
+    #funcoes de aprendizado
+    "gerar_exercicios": gerar_exercicios,
+    "recomendar_revisao": recomendar_revisao,
+    "avaliar_resposta_exercicio": avaliar_resposta_exercicio,
 }
 
-# -------------------- FUNÇÃO PRINCIPAL - processar_mensagem --------------------
+# -------------------- FUNCOES AUXILIARES --------------------
+def extrair_json(texto: str) -> dict:
+    """
+    Extrai o primeiro JSON válido de uma string.
+    Remove blocos de código markdown e texto ao redor.
+    """
+    # Remove blocos de código markdown
+    if "```json" in texto:
+        texto = texto.split("```json")[1].split("```")[0]
+    elif "```" in texto:
+        texto = texto.split("```")[1].split("```")[0]
+    
+    texto = texto.strip()
+    
+    # Tenta encontrar padrão JSON
+    json_pattern = r'\{[^{}]*\}'
+    matches = re.findall(json_pattern, texto)
+    
+    if matches:
+        # Pega o último JSON (geralmente o mais completo)
+        texto = matches[-1]
+    
+    return json.loads(texto)
+
+
+# -------------------- FUNÇÃO PRINCIPAL --------------------
+
 def processar_mensagem(mensagem: str) -> str:
     '''
-    Recebe a mensagem do usuário, envia para a LLM, interpreta a resposta, chama a função correspondente e retorna o resultado formatado.
-     - mensagem: string com a pergunta ou comando do usuário
-     - Retorna: string com a resposta final para o frontend
+    Recebe a mensagem do usuário, envia para a LLM, interpreta a resposta, 
+    chama a função correspondente e retorna o resultado formatado.
     '''
+
+    global modo_exercicio_ativo
+
+    '''
+    if exercicios_ativos and "exercicios_ativos" in dir():
+        # Está respondendo um exercício
+        resultado = avaliar_resposta(mensagem)
+        if resultado.get("continuar"):
+            return resultado["mensagem"]
+        else:
+            exercicios_ativos = None
+            return resultado["mensagem"]
+    
+    if mensagem.lower().startswith("gerar exercícios sobre "):
+        tema = mensagem.lower().replace("gerar exercícios sobre ", "").strip()
+        resultado = gerar_exercicios(tema)
+        if resultado.get("ok"):
+            # Ativa modo exercício
+            global exercicios_ativos
+            exercicios_ativos = resultado
+            return resultado["mensagem"]
+        return resultado.get("mensagem", "Erro ao gerar exercícios")
+    '''
+    if exercicios_ativos is not None:
+        resultado = avaliar_resposta(mensagem)
+        if resultado.get("ok"):
+            # Se o exercício terminou, sai do modo
+            if "Resultado final" in resultado.get("mensagem", ""):
+                modo_exercicio_ativo = False
+            return resultado.get("mensagem", "")
+        else:
+            return resultado.get("mensagem", "Erro na avaliação.")
+
 
     data_atual = datetime.now().strftime("%d/%m/%Y")
     hora_atual = datetime.now().strftime("%H:%M")
@@ -59,16 +129,24 @@ def processar_mensagem(mensagem: str) -> str:
         Hoje é dia {data_atual} e são {hora_atual}.
         {info_documentos}
 
-        # Formato de Resposta OBRIGATÓRIO
-        Você DEVE responder APENAS com JSON puro, sem texto antes ou depois.
+        # Comportamento
+        - Seja direto, conciso e amigável. Use markdown para formatação.
+        - Para perguntas sobre documentos → buscar_material_rag
+        - Para planejamento → planejar_estudos
+        - Para exercícios → gerar_exercicios
+        - Para recomendações de estudo → recomendar_revisao
+        - Para tarefas/agenda → funções específicas
 
-        Para chamar uma função:
+        # Resposta
+        Responda SEMPRE em JSON puro, sem texto adicional.
+
+        Formato para chamar função:
         {{"acao": "nome_da_funcao", "params": {{"param1": "valor1"}}}}
 
-        Para responder diretamente:
+        Formato para resposta direta:
         {{"acao": "resposta_direta", "params": {{"texto": "sua resposta aqui"}}}}
 
-        Funções disponíveis:
+        # Funções disponíveis
         - adicionar_tarefa(titulo, prazo, prioridade)
         - listar_tarefas()
         - listar_tarefas_concluidas()
@@ -78,32 +156,13 @@ def processar_mensagem(mensagem: str) -> str:
         - remover_compromisso(titulo)
         - buscar_material_rag(pergunta)
         - planejar_estudos(pergunta)
+        - gerar_exercicios(tema, qtd)
+        - recomendar_revisao(assunto_consultado)
 
-        # Perfil e Tom de Voz
-        - Seja direto, conciso e amigável. Use markdown para formatar listas e destaques.
-        - Cumprimentos/Despedidas: Responda de forma amigável e direta. Na despedida, reforce disponibilidade.
-
-        # Entendimento de Intenção
-        - Organização/Compromissos → funções de tarefas/agenda.
-        - Dúvidas conceituais/conteúdo → buscar_material_rag.
-        - Planejamento combinando agenda, tarefas e documentos → planejar_estudos.
-        - Fora de escopo → resposta_direta amigável.
-
-        # Gerenciamento de Tarefas e Agenda
-        - Tarefa não encontrada pelo título exato → chame listar_tarefas primeiro para inferir.
-        - Sem título ao concluir → tente inferir pelo contexto; se não conseguir, peça o título.
-        - Consulta de agenda sem data → retorne todos os compromissos.
-        - Compromisso sem data/hora → assuma o dia seguinte às 00:00.
-        - Tarefa sem prazo → assuma o dia seguinte.
-
-        # Recuperação de Documentos (RAG)
-        - Use obrigatoriamente buscar_material_rag para perguntas sobre documentos enviados.
-        - Se não encontrar resultados, reformule a pergunta internamente e tente novamente.
-
-        Responda APENAS com o JSON. NADA mais.
+        Responda APENAS com o JSON.
     """
 
-    # histórico de mensagens para a LLM, iniciando com o system prompt e a mensagem do usuário
+    # histórico da conversa
     historico = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user",   "content": mensagem}
@@ -114,64 +173,75 @@ def processar_mensagem(mensagem: str) -> str:
 
     for turno in range(MAX_TURNOS):
         resposta = client.chat.completions.create(
-            model='google/gemma-3-12b-it',
+            model=MODEL_NAME,
             messages=historico
         )
 
         conteudo = resposta.choices[0].message.content.strip()
-        print(f"\n[CLIENT] Turno {turno + 1}: {conteudo[:120]}")
-
-        # remove possíveis blocos de código e formatações para extrair o JSON puro
-        if conteudo.startswith("```"):
-            conteudo = conteudo.split("```")[1]
-            if conteudo.startswith("json"):
-                conteudo = conteudo[4:]
-
+        print(f"\n[CLIENT] Turno {turno + 1}: {conteudo[:80]}...")
+        
         try:
-            dados = json.loads(conteudo)
+            dados = extrair_json(conteudo)
 
-            # normaliza para aceitar "acao" ou "acoes"
-            if "acao" in dados and "acoes" not in dados:
+            # Verifica ações
+            if "acao" in dados:
                 acoes = [{"acao": dados["acao"], "params": dados.get("params", {})}]
+            elif "acoes" in dados:
+                acoes = dados["acoes"]
             else:
-                acoes = dados.get("acoes", [])
+                # Tenta resposta direta
+                if "texto" in dados:
+                    return dados["texto"]
+                elif "resposta" in dados:
+                    return dados["resposta"]
+                else:
+                    return "Desculpe, não entendi o formato da resposta."
 
-            # resposta direta — encerra o loop
-            if acoes and acoes[0].get("acao") == "resposta_direta":
-                return acoes[0]["params"].get("texto", conteudo)
+            # Processa primeira ação
+            primeira_acao = acoes[0]
 
-            # executa todas as ações do turno
-            resultados = []
-            for item in acoes:
-                acao = item.get("acao")
-                params = item.get("params", {})
+            if primeira_acao.get("acao") == "resposta_direta":
+                texto_resposta = primeira_acao.get("params", {}).get("texto", "")
+                return texto_resposta if texto_resposta else "Desculpe, não consegui gerar uma resposta."
 
-                funcao = mapa_funcoes.get(acao)
-                if not funcao:
-                    resultados.append({"acao": acao, "erro": f"Função '{acao}' não encontrada."})
-                    continue
+            #executa acao
+            acao = primeira_acao.get("acao")
+            params = primeira_acao.get("params", {})
 
-                resultado = funcao(**params)
+            funcao = mapa_funcoes.get(acao)
+            if not funcao:
+                return f"Função '{acao}' não encontrada."
 
-                # RAG e planejamento já vêm com resposta formulada — retorna direto
-                if acao in ("buscar_material_rag", "planejar_estudos"):
-                    if resultado.get("ok"):
-                        return resultado.get("contexto")
-                    else:
-                        return resultado.get("mensagem")
+            resultado = funcao(**params)
 
-                # demais funções acumulam no histórico
-                resultados.append({"acao": acao, "resultado": resultado})
-
-            # acumula resultados no histórico para o próximo turno
-            historico.append({"role": "assistant", "content": conteudo})
-            historico.append({
-                "role": "user",
-                "content": f"Resultados: {json.dumps(resultados, ensure_ascii=False)}. Continue ou responda ao usuário em JSON."
-            })
+            # RAG e planejamento já vêm com resposta formulada — retorna direto
+            if acao in (
+                "buscar_material_rag", 
+                "planejar_estudos", 
+                "gerar_exercicios", 
+                "recomendar_revisao"
+            ):
+                if resultado.get("ok"):
+                    if resultado.get("modo") == "exercicio":
+                        modo_exercicio_ativo = True
+                    return resultado.get("contexto", resultado.get("mensagem", ""))
+                else:
+                    return resultado.get("mensagem", "Erro ao processar.")
+                
+            #funcoes de tarefas/agenda
+            if "mensagem" in resultado:
+                return resultado["mensagem"]
+            elif "contexto" in resultado:
+                return resultado["contexto"]
+            else:
+                return json.dumps(resultado, ensure_ascii=False)
         
         except json.JSONDecodeError:
-            return conteudo
+            print(f"[CLIENT] Erro JSON: {e}")
+            # Se não for JSON, retorna como texto simples
+            if len(conteudo) < 500:
+                return conteudo
+            return "Desculpe, tive um problema ao processar sua mensagem."
 
     # se atingir o limite de turnos sem resposta direta, retorna a última resposta da LLM
     return "Não consegui completar a operação."

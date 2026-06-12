@@ -42,25 +42,51 @@ function adicionarMensagem(texto, tipo) {
 // um arquivo é selecionado
 fileInput.addEventListener('change', async () => {
     const file = fileInput.files[0];
+    
     if (!file) return;
 
     const formData = new FormData();
     formData.append('arquivo', file);
+    
+    try {
+        const resp = await fetch('/upload', {
+            method: 'POST',
+            body: formData  // FormData não usa Content-Type: application/json
+        });
 
-    const resp = await fetch('/upload', {
-        method: 'POST',
-        body: formData  // FormData não usa Content-Type: application/json
-    });
+        const dados = await resp.json();
 
-    const dados = await resp.json();
-    adicionarMensagem(dados.mensagem, 'received');
+        if (resp.ok) {
+            adicionarMensagem(dados.mensagem, 'received');
+        } else {
+            adicionarMensagem('Erro:' + dados.erro, 'received');
+        }
+
+    } catch (error) {
+        adicionarMensagem('Erro no upload: '+ error.message, 'received');
+    }
+
+    fileInput.value = '';
 });
 
 // Variável para controlar a exibição da mensagem inicial
 let primeiraVez = true;
 
 window.addEventListener('load', () => {
-    adicionarMensagem('Olá! Sou seu agente virtual. Como posso ajudar você hoje? Ajudo na organização de atividades e compromissos, além de responder perguntas com base nos documentos que você enviar, mas respondo uma requisição por vez, então tenha paciência comigo 😅', 'received');
+    adicionarMensagem(
+        '🤖 Olá! Sou o **Jarvis**, seu assistente acadêmico inteligente!\n\n' +
+        '📌 **Como posso te ajudar:**\n' +
+        '• 📚 Responder perguntas sobre seus documentos\n' +
+        '• ✅ Gerenciar suas tarefas e agenda\n' +
+        '• 🎯 Criar planos de estudo personalizados\n\n' +
+        '📎 **Envio de arquivos:**\n' +
+        '• Clique no ícone 📎 para enviar **UM** arquivo por vez\n' +
+        '• Formatos aceitos: PDF, TXT ou DOCX\n' +
+        '• Após o envio, espere a confirmação antes de enviar outro\n\n' +
+        '💡 **Dica:** Quanto mais específica sua pergunta, melhor a resposta!\n\n' +
+        'Como posso ajudá-lo hoje? 😊',
+        'received'
+    );
 });
 
 // Função para enviar mensagens
@@ -72,7 +98,7 @@ async function sendMessage() {
     messageInput.value = '';
 
     
-    // chama seu backend
+    try {// chama seu backend
     const resposta = await fetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,6 +107,9 @@ async function sendMessage() {
 
     const dados = await resposta.json();
     adicionarMensagem(dados.resposta, 'received');
+    } catch (error) {
+        adicionarMensagem('Erro: ' + error.message, 'received');
+    }
 
 }
 
