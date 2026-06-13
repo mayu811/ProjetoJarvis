@@ -39,15 +39,7 @@ def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int 
     chunks = []
     chunk_atual = ""
     chunk_counter = 0
-    '''
-    for paragrafo in paragrafos:
-        if len(chunk_atual) + len(paragrafo) > chunk_size and chunk_atual:
-            chunks.append(chunk_atual.strip())
-            # Pega os últimos caracteres do chunk anterior para o overlap e inicia o próximo chunk com eles
-            chunk_atual = chunk_atual[-overlap:] + "\n\n" + paragrafo
-        else:
-            chunk_atual += "\n\n" + paragrafo if chunk_atual else paragrafo
-        '''
+    
     for paragrafo in paragrafos:
         # Se adicionar este parágrafo ultrapassar o limite E já temos conteúdo
         if len(chunk_atual) + len(paragrafo) > chunk_size and chunk_atual:

@@ -73,6 +73,17 @@ def concluir_tarefa(titulo: str) -> dict:
         return {"ok": False, "mensagem": f"Tarefa '{titulo}' não encontrada."}
     return {"ok": True, "mensagem": f"Tarefa '{titulo}' concluída."}
 
+# funcao de formatacao
+def _formatar_tarefas(tarefas: list) -> str:
+    if not tarefas:
+        return "📋 Nenhuma tarefa encontrada."
+
+    texto = "📋 **Suas tarefas:**\n\n"
+    for t in tarefas:
+        status = "✅" if t.get('concluida') else "⏳"
+        texto += f"{status} **{t['titulo']}**\n"
+        texto += f"  ⏰ Prazo: {t.get('prazo', 'Sem prazo')} | ⭐ Prioridade: {t.get('prioridade', 'baixa')}\n\n"
+    return texto
 
 # ---------------------- FUNCOES DE COMPROMISSOS (AGENDA) ---------------------- #
 
@@ -120,6 +131,21 @@ def consultar_agenda(data: str = None) -> dict:
     if not compromissos:
         return {"ok": True, "mensagem": "Nenhum compromisso na agenda."}
     return {"ok": True, "compromissos": compromissos}
+
+#funcao de formatacao
+def _formatar_compromissos(compromissos: list) -> str:
+    if not compromissos:
+        return "📅 Nenhum compromisso na agenda."
+
+    texto = "📅 **Sua agenda:**\n\n"
+    for c in compromissos:
+        texto += f"• **{c['titulo']}**\n"
+        texto += f"  📍 {c.get('local', 'Sem local')} | 📅 {c.get('data_hora', 'Data não informada')}\n"
+        if c.get('descricao'):
+            texto += f"  📝 {c['descricao']}\n"
+        texto += "\n"
+    return texto
+
 
 
 # ---------------------- FUNÇÕES QUE USAM RAG ---------------------- #

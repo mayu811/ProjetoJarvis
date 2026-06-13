@@ -20,7 +20,10 @@ def normalizar(v):
 
 # recuperação híbrida combinando BM25 e semântico
 def recuperar_hibrido(
-        pergunta: str, k: int = 5, alpha: float = 0.5, max_por_source: int = 2) -> list:
+        pergunta: str, 
+        k: int = 5, 
+        alpha: float = 0.5, 
+        max_por_source: int = 2) -> list:
     """
     Combina BM25 e semântico.
     alpha = peso do semântico (0 = só BM25, 1 = só semântico, 0.5 = padrão)

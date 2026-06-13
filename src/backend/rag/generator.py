@@ -6,10 +6,15 @@
 # ---------------------- IMPORTAÇÕES --------------------------
 from src.backend.rag.retriever import recuperar_hibrido
 from src.backend.rag.connection import client, MODEL_NAME
-from src.backend.rag.indexer import indexar as indexer
+import src.backend.rag.indexer as indexer
 import json
 
 exercicios_ativos = None
+
+
+# ---------------------- VARIAVEIS GLOBAIS --------------------------
+
+
 
 # ---------------------- FUNCOES AUXILIARES --------------------------
 def _buscar_contexto_rag(pergunta: str, k: int = 5) -> str:
@@ -161,13 +166,6 @@ def gerar_exercicios_com_rag(tema: str, qtd: int = 3) -> dict:
     
     # Busca contexto dos documentos
     contexto = _buscar_contexto_rag(tema, k=5)
-    '''
-    contexto = ""
-    if indexer.indice_faiss is not None:
-        responder_rag, docs = responder_rag(tema, k=5)
-        if docs:
-            contexto = responder_rag
-    '''
     
     # Gera exercicios usando LLM
     prompt_exercicios = f"""Você é um professor acadêmico. Crie {qtd} exercícios sobre "{tema}".
@@ -193,24 +191,7 @@ def gerar_exercicios_com_rag(tema: str, qtd: int = 3) -> dict:
     """
 
     try:
-        '''
-        resp = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[{"role": "user", "content": prompt_exercicios}],
-            temperature=0.7,
-            max_tokens=1000
-        )
-
-        conteudo = resp.choices[0].message.content
-
-        #remove bloco de codigo markdown se exisitirem
-        if "```json" in conteudo:
-            conteudo = conteudo.split("```json")[1].split("```")[0]
-        elif "```" in conteudo:
-            conteudo = conteudo.split("```")[1].split("```")[0]
         
-        exercicios = json.loads(conteudo.strip())
-        '''
         exercicios = _chamar_llm_json(prompt_exercicios, temperature=0.7, max_tokens=1000)
 
         # Armazena exercícios em sessão (usando variável global simples)
@@ -267,16 +248,7 @@ def avaliar_resposta_com_rag(resposta_usuario: str) -> dict:
 
     try:
         avaliacao = _chamar_llm_json(prompt_avaliacao, temperature=0.3, max_tokens=300)
-        '''
-        resp = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[{"role": "user", "content": prompt_avaliacao}],
-            temperature=0.3,
-            max_tokens=300
-        )
         
-        avaliacao = json.loads(resp.choices[0].message.content)
-        '''
         # Registra a resposta
         exercicios_ativos["respostas"].append({
             "pergunta": questao_atual["pergunta"],
@@ -329,13 +301,6 @@ def recomendar_revisao_com_rag(assunto_consultado: str) -> dict:
     """
     #busca contexto
     contexto = _buscar_contexto_rag(f"conceitos relacionados a {assunto_consultado}", k=3)
-
-    '''
-    contexto = ""
-    if indexer.indice_faiss is not None:
-        resposta_rag, docs = responder_rag(f"conceitos relacionados a {assunto_consultado}", k=3)
-        if docs:
-            contexto = resposta_rag'''
     
     prompt_recomendacao = f"""
         Com base na consulta do usuário sobre "{assunto_consultado}", 
@@ -357,16 +322,7 @@ def recomendar_revisao_com_rag(assunto_consultado: str) -> dict:
     """
     try:
         recomendacao = _chamar_llm_json(prompt_recomendacao, temperature=0.5, max_tokens=400)
-        '''
-        resp = client.chat.completions.create(
-           model=MODEL_NAME,
-            messages=[{"role": "user", "content": prompt_recomendacao}],
-            temperature=0.5,
-            max_tokens=400 
-        )
-
-        recomendacao = json.loads(resp.choices[0].message.content)
-        '''
+        
         mensagem = f"""
         💡 **Sugestão de revisão para \"{assunto_consultado}\":**
             **Tópicos relacionados:**
