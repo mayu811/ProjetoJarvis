@@ -340,7 +340,7 @@ Representações Contextuais: Encoder-based PLMs, como BERT e RoBERTa, usam a re
 Essas estratégias permitem que os PLMs gerem embeddings de texto que capturam informações contextuais ricas e relevantes para uma variedade de tarefas, melhorando assim a qualidade dos embeddings de propósito geral."
 
 **Documentos Recuperados:**
-- `On The Role of Pretrained Language Models in General-Purpose Text Embeddings.pdf` ⚠️ *(citado com link quebrado pelo sistema)*
+- `On The Role of Pretrained Language Models in General-Purpose Text Embeddings.pdf` *(citado com link quebrado pelo sistema)*
 
 **Classificação:**
 
