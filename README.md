@@ -25,10 +25,16 @@ Tudo isso integrado em uma interface conversacional semelhante a um chatbot.
 - Listar tarefas concluídas
 - Concluir tarefas
 - Consultar agenda
-- Buscar materiais acadêmicos via RAG
 - Adicionar compromissos
 - Remover compromissos
+- Buscar materiais acadêmicos via RAG
+
+
+**Funções de aprendizado (com uso RAG também):**
 - Planejamento de estudos
+- Geramento de exercícios
+- Avaliação de respostas (dos exercicios gerados)
+- Recomendação de revisões
 
 ---
 
@@ -191,7 +197,7 @@ http://127.0.0.1:5000
 ## LLM
 
 - **OpenAI Python SDK** — cliente de comunicação com APIs de modelos
-- **Gemma 3 12B IT** — modelo hospedado no servidor institucional (LIA/UFMS)
+- **Qwen/Qwen2.5-14B-Instruct-AWQ** — modelo hospedado no servidor institucional (LIA/UFMS)
 - **Tool Calling baseado em prompting** — seleção dinâmica de funções através de respostas estruturadas em JSON produzidas pela LLM
 
 ---
@@ -202,10 +208,10 @@ http://127.0.0.1:5000
 
 Utilizado para:
 
-- formatação de código;
 - identificação e correção de bugs;
-- refinamento estrutural;
-- melhorias gerais de código.
+- refatoramento de códigos;
+- identificação e resolução de bugs;
+- melhorias geral nos códigos (visibilidade, desempenho e docstring)
 
 ---
 
@@ -215,17 +221,6 @@ Utilizado para:
 
 - enriquecimento de prompts;
 - geração de materiais acadêmicos auxiliares;
-- apoio na construção da base documental do sistema.
-
----
-
-## ChatGPT
-
-Utilizado para:
-
-- identificação e resolução de bugs;
-- explicações técnicas;
-- apoio arquitetural no desenvolvimento do sistema.
 
 ---
 
@@ -234,17 +229,16 @@ Utilizado para:
 Utilizado para:
 
 - busca de artigos acadêmicos;
+- localizar bugs;
 - pesquisa de conteúdos técnicos utilizados como base documental.
 
 ---
 
 # Observações Gerais
 
-- Algumas funcionalidades podem sofrer alterações ao longo das entregas da disciplina.
 - Arquivos suportados:
   - `.pdf`
   - `.txt`
   - `.docx`
 - O sistema depende do envio manual dos documentos para indexação.
 - Parte dos materiais utilizados pode sofrer pequenas perdas semânticas durante processos de conversão textual.
-- O projeto encontra-se em evolução contínua.
