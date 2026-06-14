@@ -18,7 +18,8 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 
 ---
 
-# Materiais
+## Documentos escolhidos
+>Total de chunks criadas = 691
 
 ---
 
@@ -28,6 +29,7 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** KNN
 - **TIPO:** `.pdf`
 - **LIMITAÇÕES:** uso de imagens no material, dificultando a compreensão completa pelo agente do sistema.
+- **CHUNKS:** 30
 
 ---
 
@@ -37,6 +39,7 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** Verificação, Validação e Teste de Software
 - **TIPO:** `.docx`
 - **LIMITAÇÕES:** nenhuma identificada até o momento.
+- **CHUNKS:** 62
 
 ---
 
@@ -46,6 +49,7 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** RAG (Retrieval-Augmented Generation)
 - **TIPO:** `.pdf`
 - **LIMITAÇÕES:** presença de imagens e elementos gráficos que dificultam a interpretação integral pelo agente.
+- **CHUNKS:** 150
 
 ---
 
@@ -55,6 +59,7 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** Transformers e mecanismo de Attention
 - **TIPO:** `.pdf`
 - **LIMITAÇÕES:** uso de imagens e diagramas que podem dificultar a extração semântica do conteúdo.
+- **CHUNKS:** 98
 
 ---
 
@@ -64,6 +69,7 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** Teste de Software
 - **TIPO:** `.txt`
 - **LIMITAÇÕES:** nenhuma identificada até o momento.
+- **CHUNKS:** 29
 
 ---
 
@@ -73,6 +79,7 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** RAG
 - **TIPO:** `.pdf`
 - **LIMITAÇÕES:** uso de imagens no artigo dificulta a interpretação completa pelo agente.
+- **CHUNKS:** 74
 
 ---
 
@@ -87,12 +94,9 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
   - FAISS
 
 - **TIPO:** `.txt`
-
-- **TEMA:**  
-  RAG, embeddings, regressão logística e linear, BM25 e FAISS.
-
-- **LIMITAÇÕES:**  
-  Algumas fórmulas presentes no material sofreram perdas durante o processo de conversão, resultando em resíduos de símbolos e caracteres que podem dificultar parcialmente a compreensão do conteúdo pelo agente.
+- **TEMA:** RAG, embeddings, regressão logística e linear, BM25 e FAISS.
+- **LIMITAÇÕES:** Algumas fórmulas presentes no material sofreram perdas durante o processo de conversão, resultando em resíduos de símbolos e caracteres que podem dificultar parcialmente a compreensão do conteúdo pelo agente.
+- **CHUNKS:** 12
 
 ---
 
@@ -102,6 +106,7 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** Geometria Computacional
 - **TIPO:** `.pdf`
 - **LIMITAÇÕES:** uso de imagens e elementos gráficos dificulta parte da interpretação automatizada.
+- **CHUNKS:** 48
 
 ---
 
@@ -111,8 +116,9 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** Geometria Computacional
 - **TIPO:** `.pdf`
 - **LIMITAÇÕES:** presença de imagens e diagramas pode dificultar a compreensão completa pelo agente.
+- **CHUNKS:** 27
 
----
+
 
 ## 10. `On The Role of Pretrained Language Models in General-Purpose Text Embeddings`
 
@@ -120,6 +126,8 @@ Além disso, como não foi especificada a obrigatoriedade de um dataset definiti
 - **TEMA:** Aborda modelos de Linguagem Pré-treinados (PLMs) no desenvolvimento de Embeddings de Texto de Propósito Geral (GPTE).
 - **TIPO:** `.pdf`
 - **LIMITAÇÕES:** presença de imagens e diagramas pode dificultar a compreensão completa pelo agente.
+- **CHUNKS:** 161
+
 
 ---
 
