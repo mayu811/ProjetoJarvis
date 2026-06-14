@@ -10,7 +10,6 @@ from datetime import datetime
 import json
 import re
 from src.backend.rag.indexer import chunks_globais
-#from src.backend.rag.generator import exercicios_ativos
 from src.backend.rag.connection import client, MODEL_NAME
 from src.backend.tools.functions import (
     adicionar_tarefa,       # adiciona tarefa ao banco
@@ -44,7 +43,7 @@ mapa_funcoes = {
     "adicionar_compromisso":    adicionar_compromisso,
     "remover_compromisso":      remover_compromisso,
     "planejar_estudos":         planejar_estudos,
-    #funcoes de aprendizado
+    #--- FUNCOES DE APRENDIZADO ABAIXO ---
     "gerar_exercicios": gerar_exercicios,
     "recomendar_revisao": recomendar_revisao,
     "avaliar_resposta_exercicio": avaliar_resposta_exercicio,
@@ -56,8 +55,6 @@ def extrair_json(texto: str) -> dict:
     Extrai o primeiro JSON válido de uma string.
     Remove blocos de código markdown e texto ao redor.
     """
-    #DEBUG
-    print(f"[EXTRAIR] Texto original: {texto[:200]}...")
 
     # Remove blocos de código markdown
     if "```json" in texto:
@@ -67,7 +64,7 @@ def extrair_json(texto: str) -> dict:
     
     texto = texto.strip()
 
-        # Tenta encontrar padrão JSON (mais robusto)
+    # Tenta encontrar padrão JSON (mais robusto)
     # Procura por { ... } considerando JSONs aninhados
     stack = []
     start = -1
@@ -113,23 +110,19 @@ def processar_mensagem(mensagem: str) -> str:
 
     global modo_exercicio_ativo
     from src.backend.rag.generator import exercicios_ativos as exercicios_ativos_atual
-    print(f"[CLIENT] DEBUG: exercicios_ativos = {exercicios_ativos_atual}")
-
+    
     if exercicios_ativos_atual is not None:
-    #if exercicios_ativos is not None:
         resultado = avaliar_resposta_exercicio(mensagem)
 
         if resultado.get("ok"):
             # Se o exercício terminou, sai do modo
-
             if "Resultado final" in resultado.get("mensagem", ""):
                 modo_exercicio_ativo = False
-                print("[CLIENT] Modo exercício desativado (concluído)")
+                print("\n[CLIENT] Modo exercício desativado (concluído)")
 
             return resultado.get("mensagem", "")
         
         else:
-
             return resultado.get("mensagem", "Erro na avaliação.")
 
 
@@ -156,6 +149,7 @@ def processar_mensagem(mensagem: str) -> str:
         - Para recomendações de estudo → recomendar_revisao
         - Para tarefas/agenda → funções específicas
         - Consulta de agenda sem data → retorne todos os compromissos
+        - Para recomendações de estudo → recomendar_revisao
 
         # Resposta
         Responda SEMPRE em JSON puro, sem texto adicional.
@@ -199,9 +193,9 @@ def processar_mensagem(mensagem: str) -> str:
         )
 
         conteudo = resposta.choices[0].message.content.strip()
-        print(f"\n[CLIENT] Turno {turno + 1}: {conteudo[:80]}...")
-        print(f"[CLIENT] CONTEÚDO BRUTO: {conteudo}")
-        print(f"[CLIENT] Primeiros 200 chars: {conteudo[:200]}...")
+        #print(f"\n[CLIENT] Turno {turno + 1}: {conteudo[:80]}...")
+        #print(f"\n[CLIENT] CONTEÚDO BRUTO: {conteudo}")
+        print(f"\n[CLIENT] Primeiros 80 caracteres do conteudo: {conteudo[:80]}...")
 
         try:
             dados = extrair_json(conteudo)
@@ -237,8 +231,7 @@ def processar_mensagem(mensagem: str) -> str:
 
             resultado = funcao(**params)
 
-            # ✅ Adicione este log para depurar
-            print(f"[CLIENT] Resultado da função '{acao}': {resultado}")
+            print(f"\n[CLIENT] Resultado da função '{acao}': {resultado}")
 
             # RAG e planejamento já vêm com resposta formulada — retorna direto
             if acao in (
@@ -247,10 +240,6 @@ def processar_mensagem(mensagem: str) -> str:
                 "gerar_exercicios", 
                 "recomendar_revisao"
             ):
-                #DEBUG
-                print(f"[CLIENT] Processando resultado de {acao}")
-                print(f"[CLIENT] Resultado ok: {resultado.get('ok')}")
-                print(f"[CLIENT] Resultado keys: {resultado.keys()}")
                 
                 if resultado.get("ok"):
                     if resultado.get("modo") == "exercicio":
@@ -259,7 +248,6 @@ def processar_mensagem(mensagem: str) -> str:
                 else:
                     return resultado.get("mensagem", "Erro ao processar.")
                 
-
             #FLUXO DE DECISOES ===========================
 
             #para respostas simples (adicionar, concluir)
@@ -279,7 +267,7 @@ def processar_mensagem(mensagem: str) -> str:
                 return json.dumps(resultado, ensure_ascii=False)
         
         except json.JSONDecodeError as e:
-            print(f"[CLIENT] Erro JSON: {e}")
+            print(f"\n[CLIENT] Erro JSON: {e}")
             # Se não for JSON, retorna como texto simples
             if len(conteudo) < 500:
                 return conteudo

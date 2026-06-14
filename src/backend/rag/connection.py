@@ -1,7 +1,6 @@
 '''
  Área de acesso a API do LLM
 '''
-# src/backend/rag/connection.py
 import httpx
 from openai import OpenAI
 

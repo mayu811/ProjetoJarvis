@@ -6,7 +6,6 @@
 import numpy as np
 import src.backend.rag.indexer as indexer
 
-
 # ---------------------------- FUNÇÕES AUXILIARES ----------------------------
 
 # normaliza um vetor para o intervalo [0, 1] - função sigmoide
@@ -19,10 +18,7 @@ def normalizar(v):
     return (v - v.min()) / delta
 
 # recuperação híbrida combinando BM25 e semântico
-def recuperar_hibrido(
-        pergunta: str, 
-        k: int = 5, 
-        alpha: float = 0.5, 
+def recuperar_hibrido(pergunta: str, k: int = 5, alpha: float = 0.5, 
         max_por_source: int = 2) -> list:
     """
     Combina BM25 e semântico.
@@ -37,14 +33,12 @@ def recuperar_hibrido(
     """
 
     print(f"\n[RETRIEVER] Entrada: pergunta='{pergunta}' | k={k} | alpha={alpha} | max_por_source={max_por_source}")
-    print(f"[RETRIEVER] Ferramenta: FAISS + BM25Okapi (híbrido)")
 
     total_chunks = len(indexer.chunks_globais)
 
     if total_chunks == 0:
         print("[RETRIEVER] Nenhum chunk indexado")
         return []
-    
     
     if total_chunks > 200:
         k_faiss = min(100, total_chunks)  # Busca mais chunks
@@ -53,38 +47,34 @@ def recuperar_hibrido(
         k_faiss = min(50, total_chunks)
         k_final = k
     
-    print(f"\n[RETRIEVER] Buscando em {total_chunks} chunks | k={k} | alpha={alpha}")
+    print(f"\n[RETRIEVER] Buscando em {total_chunks} chunks | k={k_final} | alpha={alpha}")
  
     #Gera Embedding (para as perguntas) --------------------------
     q = indexer.modelo_embed.encode([pergunta], normalize_embeddings=True).astype("float32")
     
     # Busca FAISS --------------------------
-    #k_search = min(50, len(indexer.chunks_globais))  # busca um número maior para depois filtrar
-    k_faiss = min(50, total_chunks)  # busca um número maior para depois filtrar
     scores_dense, indices = indexer.indice_faiss.search(q, k_faiss)
 
     # Normaliza scores --------------------------
     sd = normalizar(scores_dense[0])
 
-    #BM24 scores --------------------------
+    #BM25 scores --------------------------
     tokens_pergunta = indexer.tokenizar(pergunta)
     scores_bm25_full = indexer.indice_bm25.get_scores(tokens_pergunta)
     sb = normalizar(scores_bm25_full)
 
-    #Combina scores (hibrido)  --------------------------
+    # Combina scores (hibrido) --------------------------
     score_final = np.zeros(total_chunks)
     for pos, idx in enumerate(indices[0]):
         score_final[idx] = alpha * sd[pos] + (1 - alpha) * sb[idx]
 
-
     indices_ordenados = np.argsort(score_final)[::-1]
-
 
     #Contadores para prints --------------------------
     docs_finais = []
     sources_count = {}
     
-    #  --------------------------
+    # Filtra e monta lista final --------------------------
     for idx in indices_ordenados:
         if len(docs_finais) >= k_final:
             break

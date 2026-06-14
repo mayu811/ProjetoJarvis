@@ -72,19 +72,25 @@ fileInput.addEventListener('change', async () => {
 // Variável para controlar a exibição da mensagem inicial
 let primeiraVez = true;
 
+// mensagem de boas as vindas
 window.addEventListener('load', () => {
     adicionarMensagem(
         '🤖 Olá! Sou o **Jarvis**, seu assistente acadêmico inteligente!\n\n' +
-        '📌 **Como posso te ajudar:**\n' +
+        '📌 **O que posso fazer por você:**\n' +
         '• 📚 Responder perguntas sobre seus documentos\n' +
-        '• ✅ Gerenciar suas tarefas e agenda\n' +
-        '• 🎯 Criar planos de estudo personalizados\n\n' +
+        '• ✅ Gerenciar tarefas e agenda\n' +
+        '• 🎯 Criar planos de estudo personalizados\n' +
+        '• 📝 Gerar exercícios sobre qualquer tema\n' +
+        '• 💡 Recomendar tópicos relacionados para revisão\n\n' +
         '📎 **Envio de arquivos:**\n' +
-        '• Clique no ícone 📎 para enviar **UM** arquivo por vez\n' +
+        '• Clique no ícone 📎 para enviar **um** arquivo POR VEZ\n' +
         '• Formatos aceitos: PDF, TXT ou DOCX\n' +
-        '• Após o envio, espere a confirmação antes de enviar outro\n\n' +
-        '💡 **Dica:** Quanto mais específica sua pergunta, melhor a resposta!\n\n' +
-        'Como posso ajudá-lo hoje? 😊',
+        '• Aguarde a confirmação antes de enviar outro\n\n' +
+        '💬 **Exemplos do que você pode digitar:**\n' +
+        '• _"Gerar exercícios sobre [tema de algum documento enviado]"_\n' +
+        '• _"O que tenho na agenda amanhã?"_\n' +
+        '• _"Me ajuda a planejar os estudos da semana"_\n\n' +
+        'Como posso te ajudar hoje? 😊',
         'received'
     );
 });

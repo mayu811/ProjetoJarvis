@@ -1,7 +1,7 @@
 #chunking por parágrafo para impedir que informações sofram de cortes abruptos perdendo o contexto da mensagem
 
 def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int = 30,
-                       chunk_size: int = 500, overlap: int = 80) -> list[dict]:
+                                chunk_size: int = 500, overlap: int = 80) -> list[dict]:
     """
     Divide o texto em chunks por parágrafo, com limite de tamanho e overlap.
     - min_chars: ignora parágrafos muito curtos
@@ -33,7 +33,6 @@ def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int 
     if not paragrafos:
         print(f"[CHUNKER] Aviso: nenhum parágrafo válido em '{source}'")
         return []
-
 
     # agrupamento em chunks
     chunks = []
@@ -72,7 +71,6 @@ def chunking_paragrafo(texto: str, source: str = "desconhecido", min_chars: int 
     ]
 
     print(f"[CHUNKER] Gerados {len(resultado)}")
-    # prints
     if len(resultado) <= 5:
         for r in resultado:
             print(f"  - {r['id']} | {len(r['texto'][:80])} chars")

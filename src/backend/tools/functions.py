@@ -20,6 +20,7 @@ from src.backend.rag.generator import (
 # ---------------------- FUNCOES DE TAREFAS ---------------------- #
 
 def adicionar_tarefa(titulo: str, prazo: str = None, prioridade: str = "baixa") -> dict:
+    """Insere uma nova tarefa no banco. Retorna mensagem de confirmação."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -32,6 +33,7 @@ def adicionar_tarefa(titulo: str, prazo: str = None, prioridade: str = "baixa") 
 
 
 def listar_tarefas() -> dict:
+    """Retorna todas as tarefas pendentes ordenadas por prazo."""
     conn = get_connection()
     cursor = conn.cursor()
     # seleciona apenas as tarefas que não foram concluídas, ordenando pela data de prazo
@@ -44,6 +46,7 @@ def listar_tarefas() -> dict:
 
 
 def listar_tarefas_concluidas() -> dict:
+    """Retorna todas as tarefas concluídas ordenadas por prazo decrescente."""
     conn = get_connection()
     cursor = conn.cursor()
     # seleciona apenas as tarefas que foram concluídas, ordenando pela data de prazo
@@ -56,12 +59,10 @@ def listar_tarefas_concluidas() -> dict:
 
 
 def concluir_tarefa(titulo: str) -> dict:
-    '''
-        Marca a tarefa com o título especificado como concluída. 
-        A comparação do título é feita de forma case-insensitive para facilitar a identificação da tarefa, 
-        mesmo que o usuário não tenha digitado exatamente igual. Se nenhuma tarefa for encontrada com 
-        o título fornecido, retorna uma mensagem indicando que a tarefa não foi encontrada.
-    '''
+    """
+    Marca a tarefa como concluída (busca case-insensitive). 
+    Retorna erro se não encontrada.
+    """
     conn = get_connection()
     cursor = conn.cursor()
     # marca a tarefa como concluída, comparando o título de forma case-insensitive
@@ -88,6 +89,7 @@ def _formatar_tarefas(tarefas: list) -> str:
 # ---------------------- FUNCOES DE COMPROMISSOS (AGENDA) ---------------------- #
 
 def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, local: str = None) -> dict:
+    """Insere um novo compromisso na agenda."""
     conn = get_connection()
     cursor = conn.cursor()
     # insere um novo compromisso na tabela de compromissos, com os dados fornecidos
@@ -101,6 +103,7 @@ def adicionar_compromisso(titulo: str, data_hora: str, descricao: str = None, lo
 
 
 def remover_compromisso(titulo: str) -> dict:
+    """Remove o compromisso pelo título (busca case-insensitive). Retorna erro se não encontrado."""
     conn = get_connection()
     cursor = conn.cursor()
     # remove o compromisso com o título especificado, comparando de forma case-insensitive
@@ -114,6 +117,7 @@ def remover_compromisso(titulo: str) -> dict:
 
 
 def consultar_agenda(data: str = None) -> dict:
+    """Retorna compromissos de uma data específica ou todos se nenhuma data for informada."""
     conn = get_connection()
     cursor = conn.cursor()
     # se uma data específica for fornecida, seleciona apenas os compromissos dessa data
@@ -151,6 +155,7 @@ def _formatar_compromissos(compromissos: list) -> str:
 # ---------------------- FUNÇÕES QUE USAM RAG ---------------------- #
 
 def buscar_material_rag(pergunta: str) -> dict:
+    """Busca nos documentos indexados e retorna resposta gerada pelo LLM."""
     if indexer.indice_faiss is None or indexer.indice_bm25 is None:
         return {"ok": False, "mensagem": "Nenhum documento foi enviado ainda. Envie um arquivo primeiro."}
 
@@ -165,6 +170,7 @@ def buscar_material_rag(pergunta: str) -> dict:
 
 def planejar_estudos(pergunta: str) -> dict:
     """Planeja estudos combinando tarefas, agenda e documentos"""
+    
     print(f"[PLANEJAR] Combinando tarefas, agenda e documentos...")
 
     tarefas = listar_tarefas()
@@ -181,14 +187,7 @@ def planejar_estudos(pergunta: str) -> dict:
 def gerar_exercicios(tema: str, qtd: int = 5) -> dict:
     """
     Funcionalidade interativa de aprendizado.
-    Gera exercicios sobre um tema
-    
-    Args:
-        tema (str): _description_
-        num_questoes (int, optional): _description_. Defaults to 5.
-
-    Returns:
-        dict: _description_
+    Inicia sessão interativa de exercícios sobre o tema informado.
     """
 
     print(f"[EXERCICIOS] Gerando exercícios sobre: {tema}")
@@ -201,15 +200,7 @@ def gerar_exercicios(tema: str, qtd: int = 5) -> dict:
 
 
 def avaliar_resposta_exercicio(resposta_usuario: str) -> dict:
-    """
-    Avalia a resposta do usuario e avança para a próxima questão.
-
-    Args:
-        resposta_usuario (str): Resposta que ele deu para um dos exercicios gerados
-
-    Returns:
-        dict: 
-    """
+    """Avalia a resposta do usuário e avança para a próxima questão."""
     
     print(f"[AVALIACAO] Avaliando resposta...")
 
@@ -219,13 +210,26 @@ def avaliar_resposta_exercicio(resposta_usuario: str) -> dict:
         print(f"[AVALIACAO] ERRO: {e}")
         return {"ok": False, "mensagem": f"Erro na avaliacao: {str(e)}"}
 
-
-def recomendar_revisao(assunto_consultado: str) -> dict:
+'''
+def recomendar_revisao(recomendacao: str) -> dict:
     """
     Recomenda tópicos relacionados para revisão com base na pergunta do usuário.
     Funcionalidade passiva de aprendizado.
     """
         
+    print(f"[RECOMENDACAO] Gerando recomendações para: {recomendacao}")
+
+    try:
+        return recomendar_revisao_com_rag(recomendacao)
+    except Exception as e:
+        print(f"[RECOMENDACAO] ERRO: {e}")
+        return {"ok": False, "mensagem": ""}
+'''
+def recomendar_revisao(assunto_consultado: str) -> dict:
+    """
+    Recomenda tópicos relacionados para revisão com base na pergunta do usuário.
+    Funcionalidade passiva de aprendizado.
+    """
     print(f"[RECOMENDACAO] Gerando recomendações para: {assunto_consultado}")
 
     try:

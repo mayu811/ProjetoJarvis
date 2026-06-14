@@ -6,12 +6,16 @@
 # ----------------- IMPORTAÇÕES -----------------
 from pathlib import Path
 import os
-import fitz  # pymupdf
+import fitz
 import docx
-
 
 # ----------------- FUNÇÃO PRINCIPAL -----------------
 def converter_para_markdown(caminho_arquivo: str) -> str:
+    """
+    Converte um arquivo (PDF, DOCX ou TXT) para markdown.
+    Salva o resultado como .md no mesmo diretório e remove o arquivo original.
+    Retorna o texto convertido como string.
+    """
     # extrai a extensão do arquivo para determinar o método de conversão
     extensao = Path(caminho_arquivo).suffix.lower()
 
@@ -38,8 +42,12 @@ def converter_para_markdown(caminho_arquivo: str) -> str:
 
 
 # ------------ CONVERSORES ESPECÍFICOS PARA CADA FORMATO --------------
-
 def pdf_para_texto(caminho: str) -> str:
+    """
+    Extrai o texto de um PDF página a página, 
+    preservando a separação entre blocos.
+    Retorna o texto completo como string.
+    """
     doc = fitz.open(caminho)
     blocos = []
     for pagina in doc:
@@ -51,5 +59,9 @@ def pdf_para_texto(caminho: str) -> str:
     return "\n\n".join(blocos)
 
 def docx_para_texto(caminho: str) -> str:
+    """
+    Extrai os parágrafos não vazios de um arquivo DOCX.
+    Retorna o texto completo como string.
+    """
     doc = docx.Document(caminho)
     return "\n\n".join([p.text for p in doc.paragraphs if p.text.strip()])

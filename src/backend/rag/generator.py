@@ -8,13 +8,9 @@ from src.backend.rag.retriever import recuperar_hibrido
 from src.backend.rag.connection import client, MODEL_NAME
 import src.backend.rag.indexer as indexer
 import json
-
-exercicios_ativos = None
-
-
+import re
 # ---------------------- VARIAVEIS GLOBAIS --------------------------
-
-
+exercicios_ativos = None
 
 # ---------------------- FUNCOES AUXILIARES --------------------------
 def _buscar_contexto_rag(pergunta: str, k: int = 5) -> str:
@@ -41,11 +37,15 @@ def _chamar_llm_json(prompt: str, temperature: float = 0.5, max_tokens: int = 50
     )
  
     conteudo = resp.choices[0].message.content.strip()
- 
+
     if "```json" in conteudo:
         conteudo = conteudo.split("```json")[1].split("```")[0]
     elif "```" in conteudo:
         conteudo = conteudo.split("```")[1].split("```")[0]
+
+    conteudo = conteudo.strip()
+    conteudo = conteudo.replace('\t', ' ')        # tabs viram espaço
+    conteudo = re.sub(r'(?<!\\)\\(?!["\\/bfnrtu])', r'\\\\', conteudo)  # escapa barras soltas
  
     return json.loads(conteudo.strip())
  
@@ -61,7 +61,7 @@ def responder_rag(pergunta: str, k: int = 5, alpha: float = 0.5) -> tuple:
     docs = recuperar_hibrido(pergunta, k=k, alpha=alpha)
 
     if not docs:
-        print(f"[GENERATOR] Saída: nenhum documento encontrado")
+        print(f"\n[GENERATOR] Saída: nenhum documento encontrado")
         return "Não encontrei informações relevantes nos documentos enviados.", docs
 
     # Monta contexto de forma mais limpa
@@ -103,7 +103,7 @@ def responder_rag(pergunta: str, k: int = 5, alpha: float = 0.5) -> tuple:
 
         return resposta, docs
     except Exception as e:
-        print(f"[GENERATOR] ERRO: {e}")
+        print(f"\n[GENERATOR] ERRO: {e}")
         return f"Erro ao gerar resposta: {str(e)}", docs
 
 
@@ -111,17 +111,9 @@ def planejar_estudos_com_rag(pergunta: str, tarefas: dict, agenda: dict) -> str:
     """
     Gera plano de estudos combinando RAG + tarefas + agenda
     """
-    
+
     # Busca contexto dos documentos
     contexto_rag = _buscar_contexto_rag(pergunta, k=5)
-    '''
-    contexto_rag = ""
-    # usa indexer.indice_faiss pelo módulo para pegar o valor atual (não congela no import)
-    if indexer.indice_faiss is not None:
-        resposta_rag, docs = responder_rag(pergunta, k=5)
-        if docs:
-            contexto_rag = resposta_rag
-    '''    
 
     # Gera plano usando LLM
     resp = client.chat.completions.create(
@@ -188,10 +180,9 @@ def gerar_exercicios_com_rag(tema: str, qtd: int = 3) -> dict:
         - As perguntas devem testar compreensão, não decoreba
         - Inclua um mix de conceitos teóricos e exemplos práticos
         - A resposta_esperada deve conter palavras-chave para avaliação
-    """
+        """
 
     try:
-        
         exercicios = _chamar_llm_json(prompt_exercicios, temperature=0.7, max_tokens=1000)
 
         # Armazena exercícios em sessão (usando variável global simples)
@@ -213,9 +204,9 @@ def gerar_exercicios_com_rag(tema: str, qtd: int = 3) -> dict:
                        f"**Pergunta 1/{len(exercicios['questoes'])}:**\n"
                        f"{primeira_questao['pergunta']}\n\n"
                        f"(Digite sua resposta para continuar)",
-            "questao_atual": primeira_questao,
-            "total_questoes": len(exercicios["questoes"])
-        }
+                        "questao_atual": primeira_questao,
+                        "total_questoes": len(exercicios["questoes"])
+            }
     except Exception as e:
         print(f"[EXERCICIOS] Erro ao gerar exercícios: {e}")
         return {"ok": False, "mensagem": f"Erro ao gerar exercícios: {str(e)}"}
@@ -292,12 +283,6 @@ def recomendar_revisao_com_rag(assunto_consultado: str) -> dict:
     """
     Funcionalidade passiva de aprendizado.
     Recomenda tópicos relacionados para revisão com base na pergunta do usuário.
- 
-    Args:
-        assunto_consultado (str): tema/assunto sobre o qual o usuário consultou.
- 
-    Returns:
-        dict: {"ok": bool, "contexto"/"mensagem": str}
     """
     #busca contexto
     contexto = _buscar_contexto_rag(f"conceitos relacionados a {assunto_consultado}", k=3)
@@ -305,6 +290,7 @@ def recomendar_revisao_com_rag(assunto_consultado: str) -> dict:
     prompt_recomendacao = f"""
         Com base na consulta do usuário sobre "{assunto_consultado}", 
         sugira 3 tópicos relacionados que seriam úteis para revisão.
+        Não responda usando markdown.
 
         Contexto disponível (se houver):
         {contexto if contexto else "Use seu conhecimento geral"}
@@ -323,19 +309,17 @@ def recomendar_revisao_com_rag(assunto_consultado: str) -> dict:
     try:
         recomendacao = _chamar_llm_json(prompt_recomendacao, temperature=0.5, max_tokens=400)
         
-        mensagem = f"""
-        💡 **Sugestão de revisão para \"{assunto_consultado}\":**
-            **Tópicos relacionados:**
-            • {recomendacao['topicos'][0]}
-            • {recomendacao['topicos'][1]}
-            • {recomendacao['topicos'][2]}
-
-            **Por que revisar?** {recomendacao['justificativa']}
-
-            ❓ **Que tal:** {recomendacao['pergunta_sugerida']}
-
-            Digite "gerar exercícios sobre [tópico]" para praticar!
-            """
+        mensagem = (            
+            f'💡 Sugestão de revisão para "{assunto_consultado}":\n'
+            f'Tópicos relacionados:\n'
+            f'• {recomendacao["topicos"][0]}\n'
+            f'• {recomendacao["topicos"][1]}\n'
+            f'• {recomendacao["topicos"][2]}\n\n'
+            f'Por que revisar? {recomendacao["justificativa"]}\n\n'
+            f'❓ Que tal: {recomendacao["pergunta_sugerida"]}\n\n'
+            f'Digite "gerar exercícios sobre [tópico]" para praticar!'
+        )
+        
         return {"ok": True, "contexto": mensagem}
         
     except Exception as e:

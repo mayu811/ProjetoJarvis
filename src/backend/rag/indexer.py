@@ -15,7 +15,7 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 
 
-# variáveis globais
+# ---------------------- VARIAVEIS GLOBAIS --------------------------
 chunks_globais = []
 indice_bm25 = None
 indice_faiss = None
@@ -29,10 +29,19 @@ modelo_embed = SentenceTransformer("sentence-transformers/paraphrase-multilingua
 
 # Tokeniza cada chunk em lista de palavras (tudo em minúsculo, só alfanumérico)
 def tokenizar(texto: str) -> list[str]:
+    """
+    Tokeniza um texto em lista de palavras minúsculas e alfanuméricas.
+    Usada para construir o índice BM25.
+    """
     return re.findall(r"\w+", texto.lower())
 
 
 def indexar(novos_chunks: list[dict]):
+    """
+    Adiciona novos chunks ao índice híbrido (BM25 + FAISS).
+    Chunks inválidos ou vazios são ignorados.
+    Reconstrói os índices completos a cada chamada.
+    """
     global chunks_globais, indice_bm25, indice_faiss, embeddings_globais
 
     
@@ -54,13 +63,11 @@ def indexar(novos_chunks: list[dict]):
 
     chunks_globais.extend(novos_chunks_validos)
 
-    # BM25
-    
+    # BM25 ------------------------------------------------------------
     corpus_tokenizado = [tokenizar(c["texto"]) for c in chunks_globais]
     indice_bm25 = BM25Okapi(corpus_tokenizado)
 
-    # FAISS
-    
+    # FAISS ------------------------------------------------------------
     textos = [c["texto"] for c in chunks_globais]
     matriz_emb = modelo_embed.encode(
         textos,
@@ -73,4 +80,4 @@ def indexar(novos_chunks: list[dict]):
     indice_faiss = faiss.IndexFlatIP(dim)
     indice_faiss.add(matriz_emb)
 
-    print(f"[INDEXER] {len(novos_chunks)} chunks novos | total: {len(chunks_globais)}")
+    print(f"[INDEXER] {len(novos_chunks_validos)} chunks novos | total: {len(chunks_globais)}")
