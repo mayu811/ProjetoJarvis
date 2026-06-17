@@ -344,7 +344,6 @@ Essas estratégias permitem que os PLMs gerem embeddings de texto que capturam i
 
 **Classificação:**
 
-poderia me ajudar a completar essa analise de erros?
 
 ## Análise de Erros
 
@@ -372,7 +371,7 @@ poderia me ajudar a completar essa analise de erros?
 |-------|-----------|
 | **Título** | Uma função por prompt |
 | **Tipo** | Implementação |
-| **Descricao** | O sistema nã consegue realizar mais que uma chamada de função ao mesmo tempo. Por exemplo, se pedirmos "Adicione duas tarefas: 'Falar com a Nina as 13 de amanhã' e 'Levar o Tob para passear no sabádo'" ele nos daria " |
+| **Descricao** | O sistema não consegue realizar mais que uma chamada de função ao mesmo tempo. Por exemplo, se pedirmos "Adicione duas tarefas: 'Falar com a Nina as 13 de amanhã' e 'Levar o Tob para passear no sabádo'" ele nos daria " |
 | **Causa** | Não foi implementado da forma correta o código de cobertura desse comportamento. Até tentamos (com o uso de turnos - sendo o máximo até 6), mas não conseguimos deixa-lo funcional, o que fica aparente nessa falha percebida. |
 | **Solução** | Implementar uma função baseada em turno para cada função percebida que invoca um método.  |
 
@@ -381,7 +380,7 @@ poderia me ajudar a completar essa analise de erros?
 |-------|-----------|
 | **Título** | Dificuldade de compreender intenções |
 | **Tipo** | Implementação |
-| **Descricao** | O sistema, quando é pedido para ele 'adicionar na agenda' ou 'marcar um compromisso', foi percebido que ele adiciona na lista de tarefas e não no calendário acadêmico. |
+| **Descricao** | O sistema quando é pedido para ele 'adicionar na agenda' ou 'marcar um compromisso', foi percebido que ele adiciona na lista de tarefas e não no calendário acadêmico. |
 | **Causa** | Falha na implementação |
 | **Solução** | Melhorar o prompt e verificar possiveis bugs dentro  |
 

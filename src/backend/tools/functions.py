@@ -210,21 +210,6 @@ def avaliar_resposta_exercicio(resposta_usuario: str) -> dict:
         print(f"[AVALIACAO] ERRO: {e}")
         return {"ok": False, "mensagem": f"Erro na avaliacao: {str(e)}"}
 
-'''
-def recomendar_revisao(recomendacao: str) -> dict:
-    """
-    Recomenda tópicos relacionados para revisão com base na pergunta do usuário.
-    Funcionalidade passiva de aprendizado.
-    """
-        
-    print(f"[RECOMENDACAO] Gerando recomendações para: {recomendacao}")
-
-    try:
-        return recomendar_revisao_com_rag(recomendacao)
-    except Exception as e:
-        print(f"[RECOMENDACAO] ERRO: {e}")
-        return {"ok": False, "mensagem": ""}
-'''
 def recomendar_revisao(assunto_consultado: str) -> dict:
     """
     Recomenda tópicos relacionados para revisão com base na pergunta do usuário.
